@@ -1,3 +1,4 @@
+(setq elpaca-core-date '(20240221))
 (defvar elpaca-installer-version 0.7)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -314,8 +315,10 @@
   :init
   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
   (setq lsp-keymap-prefix "C-c l")
+  :config
+  (setq lsp-headerline-breadcrumb-enable nil)
   :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-         (nix-mode . lsp-deferred)
+         (python-mode . lsp-deferred)
          ;; if you want which-key integration
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
@@ -324,7 +327,16 @@
 (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 
-(use-package nix-mode)
+(use-package lsp-nix
+  :ensure lsp-mode
+  :after lsp-mode
+  :demand t
+  :custom
+  (lsp-nix-nil-formatter ["alejandra"]))
+
+(use-package nix-mode
+  :hook (nix-mode . lsp-deferred)
+  :ensure t)
 
 (use-package toc-org
     :commands toc-org-enable
@@ -379,9 +391,12 @@
         eshell-visual-commands'("bash" "fish"))
 
 (use-package vterm
+:ensure t
+:after elpaca
 :config
 (setq shell-file-name "/bin/sh"
-      vterm-max-scrollback 5000))
+      vterm-max-scrollback 5000
+      vterm-always-compile-module t))
 
 (use-package vterm-toggle
   :after vterm
