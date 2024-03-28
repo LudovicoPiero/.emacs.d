@@ -232,7 +232,9 @@
 
 (use-package elcord
   :config
-  (setq elcord-quiet t)
+  (setq elcord-quiet t
+        elcord-editor-icon "doom_cute_icon"
+        elcord-use-major-mode-as-main-icon nil)
   (elcord-mode)
 
   (defun elcord--disable-elcord-if-no-frames (f)
