@@ -48,21 +48,6 @@
 ;; Block until current queue processed.
 (elpaca-wait)
 
-;;When installing a package which modifies a form used at the top-level
-;;(e.g. a package which adds a use-package key word),
-;;use `elpaca-wait' to block until that package has been installed/configured.
-;;For example:
-;;(use-package general :demand t)
-;;(elpaca-wait)
-
-;;Turns off elpaca-use-package-mode current declartion
-;;Note this will cause the declaration to be interpreted immediately (not deferred).
-;;Useful for configuring built-in emacs features.
-;;(use-package emacs :elpaca nil :config (setq ring-bell-function #'ignore))
-
-;; Don't install anything. Defer execution of BODY
-;;(elpaca nil (message "deferred"))
-
 ;; Expands to: (elpaca evil (use-package evil :demand t))
 (use-package evil
     :init      ;; tweak evil's configuration before loading it
@@ -78,67 +63,13 @@
     (evil-collection-init))
   (use-package evil-tutor)
 
-(use-package general
-  :ensure t
-  :config
-  (general-evil-setup)
-
-  ;; set up 'SPC' as the global leader key
-  (general-create-definer airi/leader-keys
-    :states '(normal insert visual emacs)
-    :keymaps 'override
-    :prefix "SPC" ;; set leader
-    :global-prefix "M-SPC") ;; access leader in insert mode
-
-  (airi/leader-keys
-      "." '(find-file :wk "Find file")
-      "f c" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit emacs config")
-      "f r" '(counsel-recentf :wk "Find recent files")
-      "TAB TAB" '(comment-line :wk "Comment lines")
-      "g c" '(comment-line :wk "Comment lines"))
-
-  (airi/leader-keys
-    "b" '(:ignore t :wk "Buffer")
-    "bb" '(switch-to-buffer :wk "Switch buffer")
-    "bi" '(ibuffer :wk "Switch buffer")
-    "bk" '(kill-this-buffer :wk "Kill this buffer")
-    "bn" '(next-buffer :wk "Next buffer")
-    "bp" '(previous-buffer :wk "Previous buffer")
-    "br" '(revert-buffer :wk "Reload buffer"))
-
-  (airi/leader-keys
-    "e" '(:ignore t :wk "Eshell/Evaluate")
-    "eb" '(eval-buffer :wk "Evaluate elisp in buffer")
-    "ed" '(eval-defun :wk "Evaluate defun containing or after point")
-    "ee" '(eval-expression :wk "Evaluate and elisp expression")
-    "eh" '(counsel-esh-history :which-key "Eshell history")
-    "el" '(eval-last-sexp :wk "Evaluate elisp expression before point")
-    "er" '(eval-region :wk "Evaluate elisp in region")
-    "es" '(eshell :which-key "Eshell"))
-
- (airi/leader-keys
-    "h" '(:ignore t :wk "Help")
-    "hf" '(describe-function :wk "Describe function")
-    "hv" '(describe-variable :wk "Describe variable")
-    "h r r" '((lambda () (interactive)
-                (load-file "~/.config/emacs/init.el")
-                (ignore (elpaca-process-queues)))
-              :wk "Reload emacs config"))
-
-
-  (airi/leader-keys
-    "s" '(:ignore t :wk "Search")
-    "SPC" '(ibuffer :wk "List Buffers")
-    "sf" '(find-file :wk "Search File")
-    "sg" '(grep-find :wk "Search by Grep"))
-
-  (airi/leader-keys
-    "t" '(:ignore t :wk "Toggle")
-    "te" '(eshell-toggle :wk "Toggle eshell")
-    "tl" '(display-line-numbers-mode :wk "Toggle line numbers")
-    "tt" '(visual-line-mode :wk "Toggle truncated lines")
-    "tv" '(vterm-toggle :wk "Toggle vterm"))
-)
+;; Unmap keys in 'evil-maps if not done, (setq org-return-follows-link t) will not work
+(with-eval-after-load 'evil-maps
+  (define-key evil-motion-state-map (kbd "SPC") nil)
+  (define-key evil-motion-state-map (kbd "RET") nil)
+  (define-key evil-motion-state-map (kbd "TAB") nil))
+;; Setting RETURN key in org-mode to follow links
+  (setq org-return-follows-link  t)
 
 ;; Change font
 (add-to-list 'default-frame-alist
@@ -199,7 +130,7 @@
 
 ;; Trailing white space are banned!
 (setq-default show-trailing-whitespace t)
-
+(setq native-comp-async-report-warnings-errors nil)
 ;; Use one space to end sentences.
 (setq sentence-end-double-space nil)
 
@@ -258,7 +189,8 @@
   (setq dashboard-set-file-icons t)
   (setq dashboard-banner-logo-title "Welcome Home!")
   ;; (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-  (setq dashboard-startup-banner "~/.config/emacs/images/cry2sleep.png")  ;; use custom image as banner
+  (setq dashboard-startup-banner "~/.config/emacs/i
+mages/cry2sleep.png")  ;; use custom image as banner
   (setq dashboard-center-content t)
   (setq dashboard-items '((recents . 5)
                           (agenda . 5 )
@@ -271,11 +203,177 @@
   :config
   (dashboard-setup-startup-hook))
 
+(use-package dired-open
+  :config
+  (setq dired-open-extensions '(("gif" . "imv")
+                                ("jpg" . "imv")
+                                ("png" . "imv")
+                                ("mkv" . "mpv")
+                                ("mp4" . "mpv"))))
+
+(use-package peep-dired
+  :after dired
+  :hook (evil-normalize-keymaps . peep-dired-hook)
+  :config
+    (evil-define-key 'normal dired-mode-map (kbd "h") 'dired-up-directory)
+    (evil-define-key 'normal dired-mode-map (kbd "l") 'dired-open-file) ; use dired-find-file instead if not using dired-open package
+    (evil-define-key 'normal peep-dired-mode-map (kbd "j") 'peep-dired-next-file)
+    (evil-define-key 'normal peep-dired-mode-map (kbd "k") 'peep-dired-prev-file)
+)
+
 (use-package diminish)
 
 (use-package direnv
  :config
  (direnv-mode))
+
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 1)
+
+(defun +gc-after-focus-change ()
+  "Run GC when frame loses focus."
+  (run-with-idle-timer
+   5 nil
+   (lambda () (unless (frame-focus-state) (garbage-collect)))))
+
+(defun +reset-init-values ()
+  (run-with-idle-timer
+   1 nil
+   (lambda ()
+     (setq file-name-handler-alist default-file-name-handler-alist
+           gc-cons-percentage 0.1
+           gc-cons-threshold 100000000)
+     (message "gc-cons-threshold & file-name-handler-alist restored")
+     (when (boundp 'after-focus-change-function)
+       (add-function :after after-focus-change-function #'+gc-after-focus-change)))))
+
+(with-eval-after-load 'elpaca
+  (add-hook 'elpaca-after-init-hook '+reset-init-values))
+
+(use-package general
+  :ensure t
+  :config
+  (general-evil-setup)
+
+  ;; set up 'SPC' as the global leader key
+  (general-create-definer airi/leader-keys
+    :states '(normal insert visual emacs)
+    :keymaps 'override
+    :prefix "SPC" ;; set leader
+    :global-prefix "M-SPC") ;; access leader in insert mode
+
+  (airi/leader-keys
+      "." '(find-file :wk "Find file")
+      "f c" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit emacs config")
+      "f r" '(counsel-recentf :wk "Find recent files")
+      "TAB TAB" '(comment-line :wk "Comment lines"))
+
+  (airi/leader-keys
+    "b" '(:ignore t :wk "Bookmarks/Buffers")
+    "bb" '(switch-to-buffer :wk "Switch to buffer")
+    "bc" '(clone-indirect-buffer :wk "Create indirect buffer copy in a split")
+    "bC" '(clone-indirect-buffer-other-window :wk "Clone indirect buffer in new window")
+    "bd" '(bookmark-delete :wk "Delete bookmark")
+    "bi" '(ibuffer :wk "Ibuffer")
+    "bk" '(kill-current-buffer :wk "Kill current buffer")
+    "bK" '(kill-some-buffers :wk "Kill multiple buffers")
+    "bl" '(list-bookmarks :wk "List bookmarks")
+    "bm" '(bookmark-set :wk "Set bookmark")
+    "bn" '(next-buffer :wk "Next buffer")
+    "bp" '(previous-buffer :wk "Previous buffer")
+    "br" '(revert-buffer :wk "Reload buffer")
+    "bR" '(rename-buffer :wk "Rename buffer")
+    "bs" '(basic-save-buffer :wk "Save buffer")
+    "bS" '(save-some-buffers :wk "Save multiple buffers")
+    "bw" '(bookmark-save :wk "Save current bookmarks to bookmark file"))
+
+
+  (airi/leader-keys
+    "e" '(:ignore t :wk "Eshell/Evaluate")
+    "eb" '(eval-buffer :wk "Evaluate elisp in buffer")
+    "ed" '(eval-defun :wk "Evaluate defun containing or after point")
+    "ee" '(eval-expression :wk "Evaluate and elisp expression")
+    "eh" '(counsel-esh-history :which-key "Eshell history")
+    "el" '(eval-last-sexp :wk "Evaluate elisp expression before point")
+    "er" '(eval-region :wk "Evaluate elisp in region")
+    "es" '(eshell :which-key "Eshell"))
+
+  (airi/leader-keys
+    "g" '(:ignore t :wk "Git")
+    "g /" '(magit-displatch :wk "Magit dispatch")
+    "g ." '(magit-file-displatch :wk "Magit file dispatch")
+    "g b" '(magit-branch-checkout :wk "Switch branch")
+    "g c" '(:ignore t :wk "Create")
+    "g c b" '(magit-branch-and-checkout :wk "Create branch and checkout")
+    "g c c" '(magit-commit-create :wk "Create commit")
+    "g c f" '(magit-commit-fixup :wk "Create fixup commit")
+    "g C" '(magit-clone :wk "Clone repo")
+    "g f" '(:ignore t :wk "Find")
+    "g f c" '(magit-show-commit :wk "Show commit")
+    "g f f" '(magit-find-file :wk "Magit find file")
+    "g f g" '(magit-find-git-config-file :wk "Find gitconfig file")
+    "g F" '(magit-fetch :wk "Git fetch")
+    "g g" '(magit-status :wk "Magit status")
+    "g i" '(magit-init :wk "Initialize git repo")
+    "g l" '(magit-log-buffer-file :wk "Magit buffer log")
+    "g r" '(vc-revert :wk "Git revert file")
+    "g s" '(magit-stage-file :wk "Git stage file")
+    "g t" '(git-timemachine :wk "Git time machine")
+    "g u" '(magit-stage-file :wk "Git unstage file"))
+
+ (airi/leader-keys
+    "h" '(:ignore t :wk "Help")
+    "hf" '(describe-function :wk "Describe function")
+    "hv" '(describe-variable :wk "Describe variable")
+    "hrr" '((lambda () (interactive)
+                (load-file "~/.config/emacs/init.el")
+                (ignore (elpaca-process-queues)))
+              :wk "Reload emacs config"))
+
+
+  (airi/leader-keys
+    "s" '(:ignore t :wk "Search")
+    "SPC" '(ibuffer :wk "List Buffers")
+    "sf" '(find-file :wk "Search File")
+    "sg" '(grep-find :wk "Search by Grep"))
+
+  (airi/leader-keys
+    "t" '(:ignore t :wk "Toggle")
+    "te" '(eshell-toggle :wk "Toggle eshell")
+    "tl" '(display-line-numbers-mode :wk "Toggle line numbers")
+    "tt" '(visual-line-mode :wk "Toggle truncated lines")
+    "tv" '(vterm-toggle :wk "Toggle vterm"))
+
+  (airi/leader-keys
+    "w" '(:ignore t :wk "Windows")
+    ;; Window splits
+    "wc" '(evil-window-delete :wk "Close window")
+    "wn" '(evil-window-new :wk "New window")
+    "ws" '(evil-window-split :wk "Horizontal split window")
+    "wv" '(evil-window-vsplit :wk "Vertical split window")
+    ;;Window motions
+    "wh" '(evil-window-left :wk "Window left")
+    "wj" '(evil-window-down :wk "Window down")
+    "wk" '(evil-window-up :wk "Window up")
+    "wl" '(evil-window-right :wk "Window right")
+    "ww" '(evil-window-next :wk "Goto next window")
+    ;;Move Windows
+    "wH" '(buf-move-left :wk "Buffer move left")
+    "wJ" '(buf-move-down :wk "Buffer move down")
+    "wK" '(buf-move-up :wk "Buffer move up")
+    "wL" '(buf-move-right :wk "Buffer move right"))
+
+)
+
+(use-package git-timemachine
+  :after git-timemachine
+  :hook (evil-normalize-keymaps . git-timemachine-hook)
+  :config
+    (evil-define-key 'normal git-timemachine-mode-map (kbd "C-j") 'git-timemachine-show-previous-revision)
+    (evil-define-key 'normal git-timemachine-mode-map (kbd "C-k") 'git-timemachine-show-next-revision)
+)
+
+(use-package magit)
 
 (use-package counsel
   :after ivy
@@ -318,7 +416,7 @@
   :config
   (setq lsp-headerline-breadcrumb-enable nil)
   :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-         (python-mode . lsp-deferred)
+         ;; (python-mode . lsp-deferred)
          ;; if you want which-key integration
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
@@ -328,9 +426,8 @@
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 
 (use-package lsp-nix
-  :ensure lsp-mode
+  :ensure nil
   :after lsp-mode
-  :demand t
   :custom
   (lsp-nix-nil-formatter ["alejandra"]))
 
