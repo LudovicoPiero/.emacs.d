@@ -98,9 +98,6 @@
 
   (fset 'yes-or-no-p 'y-or-n-p)
 
-  ;; Global Keybinding
-  (global-set-key (kbd "C-M-j") 'buffer-menu)
-
   ;; Set Backup Directory
   (setq backup-directory-alist '(("." . "~/.config/emacs/backup"))
 	backup-by-copying      t  ; Don't de-link hard links
@@ -287,6 +284,13 @@ mages/cry2sleep.png")  ;; use custom image as banner
     "bS" '(save-some-buffers :wk "Save multiple buffers")
     "bw" '(bookmark-save :wk "Save current bookmarks to bookmark file"))
 
+  (airi/leader-keys
+    "d" '(:ignore t :wk "Dired")
+    "dd" '(dired :wk "Open dired")
+    "dj" '(dired-jump :wk "Dired jump to current")
+    "dn" '(neotree-dir :wk "Open directory in neotree")
+    "dp" '(peep-dired :wk "Peep-dired"))
+
 
   (airi/leader-keys
     "e" '(:ignore t :wk "Eshell/Evaluate")
@@ -300,26 +304,26 @@ mages/cry2sleep.png")  ;; use custom image as banner
 
   (airi/leader-keys
     "g" '(:ignore t :wk "Git")
-    "g /" '(magit-displatch :wk "Magit dispatch")
-    "g ." '(magit-file-displatch :wk "Magit file dispatch")
-    "g b" '(magit-branch-checkout :wk "Switch branch")
-    "g c" '(:ignore t :wk "Create")
-    "g c b" '(magit-branch-and-checkout :wk "Create branch and checkout")
-    "g c c" '(magit-commit-create :wk "Create commit")
-    "g c f" '(magit-commit-fixup :wk "Create fixup commit")
-    "g C" '(magit-clone :wk "Clone repo")
-    "g f" '(:ignore t :wk "Find")
-    "g f c" '(magit-show-commit :wk "Show commit")
-    "g f f" '(magit-find-file :wk "Magit find file")
-    "g f g" '(magit-find-git-config-file :wk "Find gitconfig file")
-    "g F" '(magit-fetch :wk "Git fetch")
-    "g g" '(magit-status :wk "Magit status")
-    "g i" '(magit-init :wk "Initialize git repo")
-    "g l" '(magit-log-buffer-file :wk "Magit buffer log")
-    "g r" '(vc-revert :wk "Git revert file")
-    "g s" '(magit-stage-file :wk "Git stage file")
-    "g t" '(git-timemachine :wk "Git time machine")
-    "g u" '(magit-stage-file :wk "Git unstage file"))
+    "g/" '(magit-displatch :wk "Magit dispatch")
+    "g." '(magit-file-displatch :wk "Magit file dispatch")
+    "gb" '(magit-branch-checkout :wk "Switch branch")
+    "gc" '(:ignore t :wk "Create")
+    "gcb" '(magit-branch-and-checkout :wk "Create branch and checkout")
+    "gcc" '(magit-commit-create :wk "Create commit")
+    "gcf" '(magit-commit-fixup :wk "Create fixup commit")
+    "gC" '(magit-clone :wk "Clone repo")
+    "gf" '(:ignore t :wk "Find")
+    "gfc" '(magit-show-commit :wk "Show commit")
+    "gff" '(magit-find-file :wk "Magit find file")
+    "gfg" '(magit-find-git-config-file :wk "Find gitconfig file")
+    "gF" '(magit-fetch :wk "Git fetch")
+    "gg" '(magit-status :wk "Magit status")
+    "gi" '(magit-init :wk "Initialize git repo")
+    "gl" '(magit-log-buffer-file :wk "Magit buffer log")
+    "gr" '(vc-revert :wk "Git revert file")
+    "gs" '(magit-stage-file :wk "Git stage file")
+    "gt" '(git-timemachine :wk "Git time machine")
+    "gu" '(magit-stage-file :wk "Git unstage file"))
 
  (airi/leader-keys
     "h" '(:ignore t :wk "Help")
@@ -339,8 +343,10 @@ mages/cry2sleep.png")  ;; use custom image as banner
 
   (airi/leader-keys
     "t" '(:ignore t :wk "Toggle")
+    "td" '(neotree-toggle :wk "Toggle neotree")
     "te" '(eshell-toggle :wk "Toggle eshell")
     "tl" '(display-line-numbers-mode :wk "Toggle line numbers")
+    "tr" '(rainbow-mode :wk "Toggle rainbow mode")
     "tt" '(visual-line-mode :wk "Toggle truncated lines")
     "tv" '(vterm-toggle :wk "Toggle vterm"))
 
@@ -356,13 +362,7 @@ mages/cry2sleep.png")  ;; use custom image as banner
     "wj" '(evil-window-down :wk "Window down")
     "wk" '(evil-window-up :wk "Window up")
     "wl" '(evil-window-right :wk "Window right")
-    "ww" '(evil-window-next :wk "Goto next window")
-    ;;Move Windows
-    "wH" '(buf-move-left :wk "Buffer move left")
-    "wJ" '(buf-move-down :wk "Buffer move down")
-    "wK" '(buf-move-up :wk "Buffer move up")
-    "wL" '(buf-move-right :wk "Buffer move right"))
-
+    "ww" '(evil-window-next :wk "Goto next window"))
 )
 
 (use-package git-timemachine
@@ -435,6 +435,23 @@ mages/cry2sleep.png")  ;; use custom image as banner
   :hook (nix-mode . lsp-deferred)
   :ensure t)
 
+(use-package neotree
+  :config
+  (setq neo-smart-open t
+        neo-show-hidden-files t
+        neo-window-width 30
+        neo-window-fixed-size nil
+        inhibit-compacting-font-caches t
+        projectile-switch-project-action 'neotree-projectile-action)
+        ;; truncate long file names in neotree
+        (add-hook 'neo-after-create-hook
+           #'(lambda (_)
+               (with-current-buffer (get-buffer neo-buffer-name)
+                 (setq truncate-lines t)
+                 (setq word-wrap nil)
+                 (make-local-variable 'auto-hscroll-mode)
+                 (setq auto-hscroll-mode nil)))))
+
 (use-package toc-org
     :commands toc-org-enable
     :init (add-hook 'org-mode-hook 'toc-org-enable))
@@ -445,6 +462,8 @@ mages/cry2sleep.png")  ;; use custom image as banner
 
 (electric-indent-mode -1)
 (setq org-edit-src-content-indentation 0)
+
+(eval-after-load 'org-indent '(diminish 'org-indent-mode))
 
 (require 'org-tempo)
 
