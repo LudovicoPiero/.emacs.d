@@ -4,33 +4,35 @@
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-			:ref nil :depth 1
-			:files (:defaults "elpaca-test.el" (:exclude "extensions"))
-			:build (:not elpaca--activate-package)))
-(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
- (build (expand-file-name "elpaca/" elpaca-builds-directory))
- (order (cdr elpaca-order))
- (default-directory repo))
+                               :ref nil
+                               :depth 1
+                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
+                               :build (:not elpaca--activate-package)))
+(let* ((repo (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
   (add-to-list 'load-path (if (file-exists-p build) build repo))
   (unless (file-exists-p repo)
     (make-directory repo t)
-    (when (< emacs-major-version 28) (require 'subr-x))
+    (when (< emacs-major-version 28)
+      (require 'subr-x))
     (condition-case-unless-debug err
-	(if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-		 ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-						 ,@(when-let ((depth (plist-get order :depth)))
-						     (list (format "--depth=%d" depth) "--no-single-branch"))
-						 ,(plist-get order :repo) ,repo))))
-		 ((zerop (call-process "git" nil buffer t "checkout"
-				 (or (plist-get order :ref) "--"))))
-		 (emacs (concat invocation-directory invocation-name))
-		 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-				 "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-		 ((require 'elpaca))
-		 ((elpaca-generate-autoloads "elpaca" repo)))
-	    (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-	  (error "%s" (with-current-buffer buffer (buffer-string))))
-((error) (warn "%s" err) (delete-directory repo 'recursive))))
+        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                 ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                 ,@(when-let ((depth (plist-get order :depth)))
+                                                     (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                 ,(plist-get order :repo) ,repo))))
+                 ((zerop (call-process "git" nil buffer t "checkout"
+                                       (or (plist-get order :ref) "--"))))
+                 (emacs (concat invocation-directory invocation-name))
+                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                 ((require 'elpaca))
+                 ((elpaca-generate-autoloads "elpaca" repo)))
+      (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+      (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
   (unless (require 'elpaca-autoloads nil t)
     (require 'elpaca)
     (elpaca-generate-autoloads "elpaca" repo)
@@ -50,110 +52,111 @@
 
 ;; Expands to: (elpaca evil (use-package evil :demand t))
 (use-package evil
-    :init      ;; tweak evil's configuration before loading it
-    (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
-    (setq evil-want-keybinding nil)
-    (setq evil-vsplit-window-right t)
-    (setq evil-split-window-below t)
-    (evil-mode))
-  (use-package evil-collection
-    :after evil
-    :config
-    ;;(setq evil-collection-mode-list '(dashboard dired ibuffer))
-    (evil-collection-init))
-  (use-package evil-tutor)
+  :init
+  ;; tweak evil's configuration before loading it
+  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
+  (setq evil-want-keybinding nil)
+  (setq evil-vsplit-window-right t)
+  (setq evil-split-window-below t)
+  (evil-mode))
+
+(use-package evil-collection
+  :after evil
+  :config
+  ;;(setq evil-collection-mode-list '(dashboard dired ibuffer))
+  (evil-collection-init))
 
 ;; Unmap keys in 'evil-maps if not done, (setq org-return-follows-link t) will not work
 (with-eval-after-load 'evil-maps
-  (define-key evil-motion-state-map (kbd "SPC") nil)
-  (define-key evil-motion-state-map (kbd "RET") nil)
-  (define-key evil-motion-state-map (kbd "TAB") nil))
+  ;; Unset keys in evil-motion-state-map
+  (mapc (lambda (key) (define-key evil-motion-state-map (kbd key) nil))
+        '("SPC" "RET" "TAB")))
 ;; Setting RETURN key in org-mode to follow links
-  (setq org-return-follows-link  t)
+(setq org-return-follows-link t)
 
-;; Change font
-(add-to-list 'default-frame-alist
-             '(font . "Iosevka q SemiBold-15"))
+;; Enable column number mode
+(column-number-mode 1)
 
-  (column-number-mode 1)
-  (global-auto-revert-mode)
-  (global-display-line-numbers-mode)
-  (setq-default indent-tabs-mode nil)
-  (setq-default tab-width 2)
-  (setq-default whitespace-style
-		'(face
-		  tabs
-		  spaces
-		  trailing
-		  lines-tail
-		  newline
-		  missing-newline-at-eof
-		  space-before-tab
-		  indentation
-		  empty
-		  space-after-tab
-		  space-mark
-		  tab-mark
-		  newline-mark))
+;; Automatically revert buffers when files change on disk
+(global-auto-revert-mode t)
 
-  (fset 'yes-or-no-p 'y-or-n-p)
+;; Enable display of line numbers in buffers
+(global-display-line-numbers-mode 1)
 
-  ;; Set Backup Directory
-  (setq backup-directory-alist '(("." . "~/.config/emacs/backup"))
-	backup-by-copying      t  ; Don't de-link hard links
-	version-control        t  ; Use version numbers on backups
-	delete-old-versions    t  ; Automatically delete excess backups:
-	kept-new-versions      10 ; how many of the newest versions to keep
-	kept-old-versions      5) ; and how many of the old
+;; Set default indentation settings
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 2)
 
-    ;; Stop creating backup and autosave files
-  (setq make-backup-files nil
-	auto-save-default nil)
+;; Configure whitespace display style
+(setq-default whitespace-style
+              '(face
+                tabs
+                spaces
+                trailing
+                lines-tail
+                newline
+                missing-newline-at-eof
+                space-before-tab
+                indentation
+                empty
+                space-after-tab
+                space-mark
+                tab-mark
+                newline-mark))
 
-  ;; Default is 4k, which is too low for LSP.
-  (setq read-process-output-max (* 1024 1024))
+;; Replace yes-or-no-p with y-or-n-p
+(fset 'yes-or-no-p 'y-or-n-p)
 
-  ;; Improved handling of clipboard
+;; Set backup directory and options
+(setq backup-directory-alist '(("." . "~/.config/emacs/backup"))
+      backup-by-copying      t  ; Don't de-link hard links
+      version-control        t  ; Use version numbers on backups
+      delete-old-versions    t  ; Automatically delete excess backups
+      kept-new-versions      10 ; How many of the newest versions to keep
+      kept-old-versions      5) ; How many of the old versions to keep
+
+;; Disable creation of backup and autosave files
+(setq make-backup-files nil
+      auto-save-default nil)
+
+;; Improved handling of clipboard
 (setq select-enable-clipboard t
       select-enable-primary t
       save-interprogram-paste-before-kill t)
 
-;; Avoid noisy bell.
+;; Disable noisy bell
 (setq visible-bell t
       ring-bell-function #'ignore)
 
-;; Long text goes below
+;; Enable visual line mode globally
 (global-visual-line-mode t)
 
-;; Trailing white space are banned!
+;; Show trailing whitespace
 (setq-default show-trailing-whitespace t)
-(setq native-comp-async-report-warnings-errors nil)
-;; Use one space to end sentences.
+
+;; Use one space to end sentences
 (setq sentence-end-double-space nil)
 
-;; I typically want to use UTF-8.
+;; Prefer UTF-8 coding system
 (prefer-coding-system 'utf-8)
 
-;; Nicer handling of regions.
+;; Enable transient mark mode for better region handling
 (transient-mark-mode 1)
 
-;; Don't show the splash screen
-(custom-set-variables
-  '(inhibit-startup-screen t))
-
-;; Turn off some unneeded UI elements
-(menu-bar-mode -1)  ; Leave this one on if you're a beginner!
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-(blink-cursor-mode 0)
-
-;; Display line numbers in every buffer
-(global-display-line-numbers-mode 1)
-;; Disable line numbers for some modes
+;; Disable line numbers for specific modes
 (dolist (mode '(org-mode-hook
                 term-mode-hook
                 eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
+;; Enable automatic parens pairing
+(electric-pair-mode 1)
+
+;; Prevent auto-pairing of <>
+(add-hook 'org-mode-hook (lambda ()
+                            (setq-local electric-pair-inhibit-predicate
+                                        `(lambda (c)
+                                           (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))))))
 
 (use-package all-the-icons
   :ensure t
@@ -164,7 +167,6 @@
 
 (use-package company
   :defer 2
-  :diminish
   :custom
   (company-begin-commands '(self-insert-command))
   (company-idle-delay .1)
@@ -175,8 +177,11 @@
 
 (use-package company-box
   :after company
-  :diminish
   :hook (company-mode . company-box-mode))
+
+(use-package company-quickhelp
+  :after company
+  :config (company-quickhelp-mode))
 
 (use-package dashboard
   :ensure t
@@ -185,12 +190,11 @@
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
   (setq dashboard-banner-logo-title "Welcome Home!")
-  ;; (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-  (setq dashboard-startup-banner "~/.config/emacs/i
-mages/cry2sleep.png")  ;; use custom image as banner
+  ;; (setq dashboard-startup-banner 'logo) ;; use standard Emacs logo as banner
+  (setq dashboard-startup-banner "~/.config/emacs/images/cry2sleep.png") ;; use custom image as banner
   (setq dashboard-center-content t)
   (setq dashboard-items '((recents . 5)
-                          (agenda . 5 )
+                          (agenda . 5)
                           (bookmarks . 3)
                           (projects . 3)
                           (registers . 3)))
@@ -202,6 +206,7 @@ mages/cry2sleep.png")  ;; use custom image as banner
 
 (use-package dired-open
   :config
+  ;; Customize file associations for opening files in Dired
   (setq dired-open-extensions '(("gif" . "imv")
                                 ("jpg" . "imv")
                                 ("png" . "imv")
@@ -212,40 +217,51 @@ mages/cry2sleep.png")  ;; use custom image as banner
   :after dired
   :hook (evil-normalize-keymaps . peep-dired-hook)
   :config
-    (evil-define-key 'normal dired-mode-map (kbd "h") 'dired-up-directory)
-    (evil-define-key 'normal dired-mode-map (kbd "l") 'dired-open-file) ; use dired-find-file instead if not using dired-open package
-    (evil-define-key 'normal peep-dired-mode-map (kbd "j") 'peep-dired-next-file)
-    (evil-define-key 'normal peep-dired-mode-map (kbd "k") 'peep-dired-prev-file)
-)
+  ;; Customize key bindings for peep-dired
+  (evil-define-key 'normal dired-mode-map (kbd "h") 'dired-up-directory)
+  (evil-define-key 'normal dired-mode-map (kbd "l") 'dired-open-file) ; use dired-find-file instead if not using dired-open package
+  (evil-define-key 'normal peep-dired-mode-map (kbd "j") 'peep-dired-next-file)
+  (evil-define-key 'normal peep-dired-mode-map (kbd "k") 'peep-dired-prev-file))
 
 (use-package diminish)
 
 (use-package direnv
- :config
- (direnv-mode))
+  :config
+  ;; Enable direnv mode globally
+  (direnv-mode))
 
-(setq gc-cons-threshold most-positive-fixnum
-      gc-cons-percentage 1)
+(use-package elcord
+  :config
+  (setq elcord-quiet t)
+  (elcord-mode)
 
-(defun +gc-after-focus-change ()
-  "Run GC when frame loses focus."
-  (run-with-idle-timer
-   5 nil
-   (lambda () (unless (frame-focus-state) (garbage-collect)))))
+  (defun elcord--disable-elcord-if-no-frames (f)
+    "Disable elcord mode if there are no frames left after deleting F from visible-frame-list."
+    ;; (declare (ignore f))
+    (when (let ((frames (delete f (visible-frame-list))))
+            (or (null frames)
+                (and (null (cdr frames))
+                     (eq (car frames) terminal-frame))))
+      (elcord-mode -1)
+      (add-hook 'after-make-frame-functions 'elcord--enable-on-frame-created)))
 
-(defun +reset-init-values ()
-  (run-with-idle-timer
-   1 nil
-   (lambda ()
-     (setq file-name-handler-alist default-file-name-handler-alist
-           gc-cons-percentage 0.1
-           gc-cons-threshold 100000000)
-     (message "gc-cons-threshold & file-name-handler-alist restored")
-     (when (boundp 'after-focus-change-function)
-       (add-function :after after-focus-change-function #'+gc-after-focus-change)))))
+  (defun elcord--enable-on-frame-created (f)
+    "Enable elcord mode when a new frame F is created."
+    ;; (declare (ignore f))
+    (elcord-mode +1))
 
-(with-eval-after-load 'elpaca
-  (add-hook 'elpaca-after-init-hook '+reset-init-values))
+  (defun my/elcord-mode-hook ()
+    "Hook to manage elcord mode activation and deactivation."
+    (if elcord-mode
+        (add-hook 'delete-frame-functions 'elcord--disable-elcord-if-no-frames)
+      (remove-hook 'delete-frame-functions 'elcord--disable-elcord-if-no-frames)))
+
+  (add-hook 'elcord-mode-hook 'my/elcord-mode-hook))
+
+(use-package flycheck
+  :after lsp-mode
+  :diminish flycheck-mode
+  :init (global-flycheck-mode))
 
 (use-package general
   :ensure t
@@ -261,8 +277,9 @@ mages/cry2sleep.png")  ;; use custom image as banner
 
   (airi/leader-keys
       "." '(find-file :wk "Find file")
-      "f c" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit emacs config")
-      "f r" '(counsel-recentf :wk "Find recent files")
+      "fc" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit emacs config")
+      "fr" '(counsel-recentf :wk "Find recent files")
+      "ff" '(lsp-format-buffer :wk "Format Buffer") ;; TODO: move this somewhere
       "TAB TAB" '(comment-line :wk "Comment lines"))
 
   (airi/leader-keys
@@ -339,7 +356,7 @@ mages/cry2sleep.png")  ;; use custom image as banner
     "s" '(:ignore t :wk "Search")
     "SPC" '(ibuffer :wk "List Buffers")
     "sf" '(find-file :wk "Search File")
-    "sg" '(grep-find :wk "Search by Grep"))
+    "sg" '(helm-projectile-grep :wk "Search by Grep"))
 
   (airi/leader-keys
     "t" '(:ignore t :wk "Toggle")
@@ -369,9 +386,9 @@ mages/cry2sleep.png")  ;; use custom image as banner
   :after git-timemachine
   :hook (evil-normalize-keymaps . git-timemachine-hook)
   :config
-    (evil-define-key 'normal git-timemachine-mode-map (kbd "C-j") 'git-timemachine-show-previous-revision)
-    (evil-define-key 'normal git-timemachine-mode-map (kbd "C-k") 'git-timemachine-show-next-revision)
-)
+  ;; Define key bindings for Git Time Machine mode
+  (evil-define-key 'normal git-timemachine-mode-map (kbd "C-j") 'git-timemachine-show-previous-revision)
+  (evil-define-key 'normal git-timemachine-mode-map (kbd "C-k") 'git-timemachine-show-next-revision))
 
 (use-package magit)
 
@@ -381,15 +398,15 @@ mages/cry2sleep.png")  ;; use custom image as banner
   :config (counsel-mode))
 
 (use-package ivy
+  :ensure t
   :bind
-  ;; ivy-resume resumes the last Ivy-based completion.
-  (("C-c C-r" . ivy-resume)
-   ("C-x B" . ivy-switch-buffer-other-window))
+  (("C-c C-r" . ivy-resume)     ;; Resume the last Ivy-based completion
+   ("C-x B" . ivy-switch-buffer-other-window))  ;; Switch buffer in another window
   :diminish
   :custom
-  (setq ivy-use-virtual-buffers t)
-  (setq ivy-count-format "(%d/%d) ")
-  (setq enable-recursive-minibuffers t)
+  (ivy-use-virtual-buffers t)    ;; Enable virtual buffers
+  (ivy-count-format "(%d/%d) ")  ;; Format for displaying count
+  (enable-recursive-minibuffers t)  ;; Allow recursive minibuffers
   :config
   (ivy-mode))
 
@@ -400,25 +417,27 @@ mages/cry2sleep.png")  ;; use custom image as banner
 (use-package ivy-rich
   :after ivy
   :ensure t
-  :init (ivy-rich-mode 1) ;; this gets us descriptions in M-x.
+  :init (ivy-rich-mode 1)  ;; Enable Ivy rich mode for descriptions in M-x
   :custom
-  (ivy-virtual-abbreviate 'full
-   ivy-rich-switch-buffer-align-virtual-buffer t
-   ivy-rich-path-style 'abbrev)
+  (ivy-virtual-abbreviate 'full)
+  (ivy-rich-switch-buffer-align-virtual-buffer t)
+  (ivy-rich-path-style 'abbrev)
   :config
   (ivy-set-display-transformer 'ivy-switch-buffer
                                'ivy-rich-switch-buffer-transformer))
 
 (use-package lsp-mode
   :init
-  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+  ;; Set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
   (setq lsp-keymap-prefix "C-c l")
   :config
-  (setq lsp-headerline-breadcrumb-enable nil)
-  :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-         ;; (python-mode . lsp-deferred)
-         ;; if you want which-key integration
-         (lsp-mode . lsp-enable-which-key-integration))
+  (setq lsp-headerline-breadcrumb-enable nil
+        lsp-diagnostics-provider 'flycheck
+        lsp-completion-provider 'company
+        lsp-log-io nil)
+  :hook
+  ;; Attach LSP mode to the appropriate major mode
+  ((lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
 
 (use-package lsp-ui)
@@ -435,6 +454,34 @@ mages/cry2sleep.png")  ;; use custom image as banner
   :hook (nix-mode . lsp-deferred)
   :ensure t)
 
+;; (use-package css-mode
+;;   :mode (("\\.css\\'" . css-mode)))
+
+(use-package web-mode
+  :mode (("\\.html\\'" . web-mode)
+         ("\\.php\\'" . web-mode))
+  :config
+  (setq web-mode-enable-current-column-highlight t
+        web-mode-enable-current-element-highlight t
+        web-mode-markup-indent-offset 2
+        web-mode-css-indent-offset 2
+        web-mode-code-indent-offset 2))
+
+(use-package js-mode
+  :ensure nil
+  :mode (("\\.js?\\'" . js-mode)
+         ("\\.jsx?\\'" . js-mode))
+  :config
+  (setq javascript-indent-level 2
+        js-indent-level 2))
+
+(use-package typescript-mode
+  :mode (("\\.ts?\\'" . typescript-mode)
+         ("\\.tsx?\\'" . typescript-mode))
+  :config
+  (setq typescript-indent-level 2
+        typescript-auto-indent-flag t))
+
 (use-package neotree
   :config
   (setq neo-smart-open t
@@ -442,44 +489,74 @@ mages/cry2sleep.png")  ;; use custom image as banner
         neo-window-width 30
         neo-window-fixed-size nil
         inhibit-compacting-font-caches t
-        projectile-switch-project-action 'neotree-projectile-action)
-        ;; truncate long file names in neotree
-        (add-hook 'neo-after-create-hook
-           #'(lambda (_)
-               (with-current-buffer (get-buffer neo-buffer-name)
-                 (setq truncate-lines t)
-                 (setq word-wrap nil)
-                 (make-local-variable 'auto-hscroll-mode)
-                 (setq auto-hscroll-mode nil)))))
+        projectile-switch-project-action 'neotree-projectile-action
+        ;; Truncate long file names in Neotree
+        neo-after-create-hook
+        #'(lambda (_)
+            (setq truncate-lines t
+                  word-wrap nil
+                  auto-hscroll-mode nil))))
 
 (use-package toc-org
-    :commands toc-org-enable
-    :init (add-hook 'org-mode-hook 'toc-org-enable))
+  :commands toc-org-enable
+  :hook (org-mode . toc-org-enable))
 
-(add-hook 'org-mode-hook 'org-indent-mode)
-(use-package org-bullets)
-(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+(use-package org-bullets
+  :hook (org-mode . (lambda () (org-bullets-mode 1))))
 
-(electric-indent-mode -1)
-(setq org-edit-src-content-indentation 0)
+(add-hook 'org-mode-hook
+          (lambda ()
+            (electric-indent-local-mode -1)
+            (setq org-edit-src-content-indentation 0)))
 
 (eval-after-load 'org-indent '(diminish 'org-indent-mode))
 
-(require 'org-tempo)
+(add-hook 'org-mode-hook 'org-tempo-mode)
 
 (use-package projectile
+  :ensure t
   :config
-  (projectile-mode 1))
+  (projectile-mode 1)
+
+  ;; Set your preferred key bindings here
+  :bind (("C-c p" . projectile-command-map))
+
+  ;; Additional settings
+  :custom
+  ;; Define your project root files/directories here
+  (projectile-project-root-files '(".projectile" ".git" ".svn" ".hg" "Makefile" "package.json"))
+
+  ;; Enable caching to improve performance
+  (projectile-enable-caching t)
+
+  ;; Configure indexing method (default is 'alien for faster indexing)
+  (projectile-indexing-method 'native)
+
+  ;; Display project name in the modeline
+  (projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name)))))
+
+  ;; If you're using Ivy or Helm for completion, you can integrate Projectile
+  ;; with them for a better interactive experience
+  ;; :after ivy
+
+  ;; Enable Ivy integration
+  (use-package counsel-projectile
+    :config
+    (counsel-projectile-mode 1))
+
+  ;; Enable Helm integration
+  (use-package helm-projectile
+    :config
+    (helm-projectile-on))
+
+(use-package rainbow-delimiters
+  :hook ((emacs-lisp-mode . rainbow-delimiters-mode)
+         (clojure-mode . rainbow-delimiters-mode)))
 
 (use-package rainbow-mode
   :diminish
   :hook
   ((org-mode prog-mode) . rainbow-mode))
-
-(defun reload-init-file ()
-  (interactive)
-  (load-file user-init-file)
-  (load-file user-init-file))
 
 (use-package eshell-toggle
   :custom
@@ -488,31 +565,27 @@ mages/cry2sleep.png")  ;; use custom image as banner
   (eshell-toggle-run-command nil)
   (eshell-toggle-init-function #'eshell-toggle-init-ansi-term))
 
-  (use-package eshell-syntax-highlighting
-    :after esh-mode
-    :config
-    (eshell-syntax-highlighting-global-mode +1))
+(use-package eshell-syntax-highlighting
+  :after esh-mode
+  :config
+  (eshell-syntax-highlighting-global-mode +1))
 
-  ;; eshell-syntax-highlighting -- adds fish/zsh-like syntax highlighting.
-  ;; eshell-rc-script -- your profile for eshell; like a bashrc for eshell.
-  ;; eshell-aliases-file -- sets an aliases file for the eshell.
-
-  (setq eshell-rc-script (concat user-emacs-directory "eshell/profile")
-        eshell-aliases-file (concat user-emacs-directory "eshell/aliases")
-        eshell-history-size 5000
-        eshell-buffer-maximum-lines 5000
-        eshell-hist-ignoredups t
-        eshell-scroll-to-bottom-on-input t
-        eshell-destroy-buffer-when-process-dies t
-        eshell-visual-commands'("bash" "fish"))
+(setq eshell-rc-script (concat user-emacs-directory "eshell/profile")
+      eshell-aliases-file (concat user-emacs-directory "eshell/aliases")
+      eshell-history-size 5000
+      eshell-buffer-maximum-lines 5000
+      eshell-hist-ignoredups t
+      eshell-scroll-to-bottom-on-input t
+      eshell-destroy-buffer-when-process-dies t
+      eshell-visual-commands '("bash" "fish"))
 
 (use-package vterm
-:ensure t
-:after elpaca
-:config
-(setq shell-file-name "/bin/sh"
-      vterm-max-scrollback 5000
-      vterm-always-compile-module t))
+  :ensure t
+  :after elpaca
+  :config
+  (setq shell-file-name "/bin/sh"
+        vterm-max-scrollback 5000
+        vterm-always-compile-module t))
 
 (use-package vterm-toggle
   :after vterm
@@ -521,17 +594,13 @@ mages/cry2sleep.png")  ;; use custom image as banner
   (setq vterm-toggle-scope 'project)
   (add-to-list 'display-buffer-alist
                '((lambda (buffer-or-name _)
-                     (let ((buffer (get-buffer buffer-or-name)))
-                       (with-current-buffer buffer
-                         (or (equal major-mode 'vterm-mode)
-                             (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
-                  (display-buffer-reuse-window display-buffer-at-bottom)
-                  ;;(display-buffer-reuse-window display-buffer-in-direction)
-                  ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-                  ;;(direction . bottom)
-                  ;;(dedicated . t) ;dedicated is supported in emacs27
-                  (reusable-frames . visible)
-                  (window-height . 0.3))))
+                   (let ((buffer (get-buffer buffer-or-name)))
+                     (with-current-buffer buffer
+                       (or (equal major-mode 'vterm-mode)
+                           (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
+                 (display-buffer-reuse-window display-buffer-at-bottom)
+                 (reusable-frames . visible)
+                 (window-height . 0.3))))
 
 (use-package doom-themes
   :ensure t
@@ -557,7 +626,12 @@ mages/cry2sleep.png")  ;; use custom image as banner
   (setq doom-modeline-minor-modes t)
   :init (doom-modeline-mode 1))
 
-(add-to-list 'default-frame-alist '(alpha-background . 90))
+(use-package undo-tree
+  :ensure t
+  :diminish
+  :config
+  (global-undo-tree-mode)
+  (setq evil-undo-system 'undo-tree))
 
 (use-package which-key
   :ensure t
