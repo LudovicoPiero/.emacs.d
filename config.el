@@ -360,7 +360,8 @@
     "s" '(:ignore t :wk "Search")
     "SPC" '(ibuffer :wk "List Buffers")
     "sf" '(find-file :wk "Search File")
-    "sg" '(helm-projectile-grep :wk "Search by Grep"))
+    "/" '(counsel-grep :wk "Search by Grep in the current buffer")
+    "sg" '(counsel-grep :wk "Search by Grep in the whole project"))
 
   (airi/leader-keys
     "t" '(:ignore t :wk "Toggle")
@@ -400,6 +401,11 @@
   :after ivy
   :diminish
   :config (counsel-mode))
+
+
+(use-package counsel-projectile
+  :after projectile
+  :hook (projectile-mode . counsel-projectile-mode))
 
 (use-package ivy
   :ensure t
