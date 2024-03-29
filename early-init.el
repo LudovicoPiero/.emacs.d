@@ -10,13 +10,16 @@
 (setq package-enable-at-startup nil)
 
 ;; Make ~/.config/emacs clean
-(require 'no-littering)
+(use-package no-littering)
+;; Recent files
 (require 'recentf)
 (add-to-list 'recentf-exclude
              (recentf-expand-file-name no-littering-var-directory))
 (add-to-list 'recentf-exclude
              (recentf-expand-file-name no-littering-etc-directory))
+;; Saved customizations
 (setq custom-file (no-littering-expand-etc-file-name "custom.el"))
+;; Native compilation cache
 (when (fboundp 'startup-redirect-eln-cache)
   (startup-redirect-eln-cache
    (convert-standard-filename

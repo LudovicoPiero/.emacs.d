@@ -9,11 +9,12 @@
 * Table Of Content :toc:
 - [[#general-packages--tweaks-to-load-before-anything][General Packages / Tweaks to Load Before Anything]]
   - [[#elpaca-package-manager][Elpaca Package Manager]]
-  - [[#load-evil-mode][Load Evil Mode]]
+  - [[#evil-mode][Evil Mode]]
   - [[#tweaks][Tweaks]]
 - [[#all-the-icons][All The Icons]]
 - [[#company][Company]]
 - [[#dashboard][Dashboard]]
+- [[#deadgrep][Deadgrep]]
 - [[#dired][Dired]]
 - [[#diminish][Diminish]]
 - [[#direnv][Direnv]]
@@ -23,8 +24,6 @@
 - [[#git-programs][Git Programs]]
   - [[#git-time-machine][Git Time Machine]]
   - [[#magit][Magit]]
-- [[#ivy-counsel][Ivy (Counsel)]]
-  - [[#counsel][Counsel]]
 - [[#languages-support][Languages Support]]
   - [[#lsp-mode][LSP Mode]]
   - [[#nix-mode][Nix Mode]]
@@ -42,12 +41,13 @@
   - [[#eshell][Eshell]]
   - [[#vterm][Vterm]]
   - [[#vterm-toggle][Vterm-toggle]]
-- [[#theme][THEME]]
-  - [[#all-theme][All Theme]]
+- [[#ui][UI]]
+  - [[#theme][Theme]]
   - [[#modeline][Modeline]]
 - [[#treesitter][Treesitter]]
 - [[#treemacs][Treemacs]]
 - [[#undo-tree][Undo Tree]]
+- [[#vertico][Vertico]]
 - [[#which-key][Which Key]]
 
 * General Packages / Tweaks to Load Before Anything
@@ -109,7 +109,7 @@
    ;; Block until current queue processed.
    (elpaca-wait)
    #+end_src
-** Load Evil Mode
+** Evil Mode
 
    Evil Mode provides Vim emulation in Emacs, allowing users familiar with Vim keybindings and commands to work seamlessly within Emacs.
 
@@ -130,7 +130,14 @@
      ;;(setq evil-collection-mode-list '(dashboard dired ibuffer))
      (evil-collection-init))
 
-   (use-package evil-nerd-commenter)
+   (use-package evil-surround
+     :after evil
+     :ensure t
+     :config
+     (global-evil-surround-mode 1))
+
+   (use-package evil-nerd-commenter
+     :after evil)
 
    ;; Unmap keys in 'evil-maps if not done, (setq org-return-follows-link t) will not work
    (with-eval-after-load 'evil-maps
@@ -233,6 +240,7 @@
                                            `(lambda (c)
                                               (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))))))
    #+end_src
+
 * All The Icons
 #+begin_src emacs-lisp
 (use-package all-the-icons
@@ -287,6 +295,12 @@
      :config
      (dashboard-setup-startup-hook))
    #+end_src
+
+* Deadgrep
+#+begin_src emacs-lisp
+(use-package deadgrep)
+#+end_src
+
 * Dired
 
    The "Dired" section configures settings related to the Dired mode, which provides a file management interface in Emacs.
@@ -395,7 +409,7 @@
   (airi/leader-keys
       "." '(find-file :wk "Find file")
       "fc" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit emacs config")
-      "fr" '(counsel-recentf :wk "Find recent files")
+      "fr" '(recentf :wk "Find recent files")
       "ff" '(lsp-format-buffer :wk "Format Buffer") ;; TODO: move this somewhere
       "TAB TAB" '(evilnc-comment-or-uncomment-lines :wk "Comment lines"))
 
@@ -430,7 +444,6 @@
     "eb" '(eval-buffer :wk "Evaluate elisp in buffer")
     "ed" '(eval-defun :wk "Evaluate defun containing or after point")
     "ee" '(eval-expression :wk "Evaluate and elisp expression")
-    "eh" '(counsel-esh-history :which-key "Eshell history")
     "el" '(eval-last-sexp :wk "Evaluate elisp expression before point")
     "er" '(eval-region :wk "Evaluate elisp in region")
     "es" '(eshell :which-key "Eshell"))
@@ -472,8 +485,8 @@
     "s" '(:ignore t :wk "Search")
     "SPC" '(ibuffer :wk "List Buffers")
     "sf" '(find-file :wk "Search File")
-    "/" '(counsel-grep :wk "Search by Grep in the current buffer")
-    "sg" '(counsel-grep :wk "Search by Grep in the whole project"))
+    "/" '(deadgrep :wk "Search by Grep in the current buffer")
+    "sg" '(deadgrep :wk "Search by Grep in the whole project"))
 
   (airi/leader-keys
     "t" '(:ignore t :wk "Toggle")
@@ -524,54 +537,6 @@
    #+begin_src emacs-lisp
    (use-package magit)
    #+end_src
-* Ivy (Counsel)
-
-   The "Ivy (Counsel)" section configures settings related to Ivy and Counsel, which provide completion and selection interfaces in Emacs.
-
-** Counsel
-
-   Configures the counsel package, which provides enhanced completion and selection features.
-
-   #+begin_src emacs-lisp
-   (use-package counsel
-     :after ivy
-     :diminish
-     :config (counsel-mode))
-
-
-   (use-package counsel-projectile
-     :after projectile
-     :hook (projectile-mode . counsel-projectile-mode))
-
-   (use-package ivy
-     :ensure t
-     :bind
-     (("C-c C-r" . ivy-resume)     ;; Resume the last Ivy-based completion
-      ("C-x B" . ivy-switch-buffer-other-window))  ;; Switch buffer in another window
-     :diminish
-     :custom
-     (ivy-use-virtual-buffers t)    ;; Enable virtual buffers
-     (ivy-count-format "(%d/%d) ")  ;; Format for displaying count
-     (enable-recursive-minibuffers t)  ;; Allow recursive minibuffers
-     :config
-     (ivy-mode))
-
-   (use-package all-the-icons-ivy-rich
-     :ensure t
-     :init (all-the-icons-ivy-rich-mode 1))
-
-   (use-package ivy-rich
-     :after ivy
-     :ensure t
-     :init (ivy-rich-mode 1)  ;; Enable Ivy rich mode for descriptions in M-x
-     :custom
-     (ivy-virtual-abbreviate 'full)
-     (ivy-rich-switch-buffer-align-virtual-buffer t)
-     (ivy-rich-path-style 'abbrev)
-     :config
-     (ivy-set-display-transformer 'ivy-switch-buffer
-                                  'ivy-rich-switch-buffer-transformer))
-   #+end_src
 * Languages Support
 
 ** LSP Mode
@@ -619,8 +584,9 @@
   Configures modes and settings for web development languages like HTML, CSS, JavaScript, and TypeScript.
 
   #+begin_src emacs-lisp
-  ;; (use-package css-mode
-  ;;   :mode (("\\.css\\'" . css-mode)))
+  (use-package css-mode
+    :ensure nil ;; built-in
+    :mode (("\\.css\\'" . css-mode)))
 
   (use-package web-mode
     :mode (("\\.html\\'" . web-mode)
@@ -776,26 +742,26 @@
                  (window-height . 0.3))))
 #+end_src
 
-* THEME
-** All Theme
+* UI
+** Theme
    #+begin_src emacs-lisp
    (use-package doom-themes
-     :ensure t
-     :config
-     ;; Global settings (defaults)
-     (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-           doom-themes-enable-italic t) ; if nil, italics is universally disabled
-     (load-theme 'doom-one t)
+        :ensure t
+        :config
+        ;; Global settings (defaults)
+        (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+              doom-themes-enable-italic t) ; if nil, italics is universally disabled
+        (load-theme 'doom-ayu-dark t)
 
-     ;; Enable flashing mode-line on errors
-     (doom-themes-visual-bell-config)
-     ;; Enable custom neotree theme (all-the-icons must be installed!)
-     (doom-themes-neotree-config)
-     ;; or for treemacs users
-     (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-     (doom-themes-treemacs-config)
-     ;; Corrects (and improves) org-mode's native fontification.
-     (doom-themes-org-config))
+        ;; Enable flashing mode-line on errors
+        (doom-themes-visual-bell-config)
+        ;; Enable custom neotree theme (all-the-icons must be installed!)
+        (doom-themes-neotree-config)
+        ;; or for treemacs users
+        (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+        (doom-themes-treemacs-config)
+        ;; Corrects (and improves) org-mode's native fontification.
+        (doom-themes-org-config))
    #+end_src
 
 ** Modeline
@@ -853,6 +819,72 @@
   (global-undo-tree-mode)
   (setq evil-undo-system 'undo-tree))
 #+end_src
+
+* Vertico
+#+begin_src emacs-lisp
+;; Enable vertico
+(use-package vertico
+  :init
+  (vertico-mode)
+
+  ;; Different scroll margin
+  ;; (setq vertico-scroll-margin 0)
+
+  ;; Show more candidates
+  (setq vertico-count 10)
+
+  ;; Grow and shrink the Vertico minibuffer
+  (setq vertico-resize t)
+
+  ;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
+  (setq vertico-cycle t)
+  )
+
+;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist
+  :ensure nil
+  :init
+  (savehist-mode))
+
+;; A few more useful configurations...
+(use-package emacs
+  :ensure nil
+  :init
+  ;; Add prompt indicator to `completing-read-multiple'.
+  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
+  (defun crm-indicator (args)
+    (cons (format "[CRM%s] %s"
+                  (replace-regexp-in-string
+                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                   crm-separator)
+                  (car args))
+          (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  ;; Support opening new minibuffers from inside existing minibuffers.
+  (setq enable-recursive-minibuffers t)
+
+  ;; Emacs 28 and newer: Hide commands in M-x which do not work in the current
+  ;; mode.  Vertico commands are hidden in normal buffers. This setting is
+  ;; useful beyond Vertico.
+  (setq read-extended-command-predicate #'command-completion-default-include-p))
+
+;; Optionally use the `orderless' completion style.
+(use-package orderless
+  :init
+  ;; Configure a custom style dispatcher (see the Consult wiki)
+  ;; (setq orderless-style-dispatchers '(+orderless-consult-dispatch orderless-affix-dispatch)
+  ;;       orderless-component-separator #'orderless-escapable-split-on-space)
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
+#+end_src
+
 * Which Key
 
 #+BEGIN_SRC emacs-lisp
