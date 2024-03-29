@@ -1,0 +1,107 @@
+| Keybind     | Description       |
+|-------------+-------------------|
+| SPC .       | Find file         |
+| SPC fc      | Edit Emacs config |
+| SPC fr      | Find recent files |
+| SPC ff      | Format buffer     |
+| SPC TAB TAB | Comment lines     |
+
+| Keybind | Description                   |
+|---------|-------------------------------|
+| SPC b   | Bookmarks/Buffers             |
+| SPC bb  | Switch to buffer              |
+| SPC bc  | Create indirect buffer copy in a split |
+| SPC bC  | Clone indirect buffer in new window |
+| SPC bd  | Delete bookmark               |
+| SPC bi  | Ibuffer                       |
+| SPC bk  | Kill current buffer           |
+| SPC bK  | Kill multiple buffers         |
+| SPC bl  | List bookmarks                |
+| SPC bm  | Set bookmark                  |
+| SPC bn  | Next buffer                   |
+| SPC bp  | Previous buffer               |
+| SPC br  | Reload buffer                 |
+| SPC bR  | Rename buffer                 |
+| SPC bs  | Save buffer                   |
+| SPC bS  | Save multiple buffers         |
+| SPC bw  | Save current bookmarks to bookmark file |
+
+| Keybind | Description                   |
+|---------|-------------------------------|
+| SPC d   | Dired                         |
+| SPC dd  | Open dired                    |
+| SPC dj  | Dired jump to current         |
+| SPC dp  | Peep-dired                    |
+
+| Keybind | Description                   |
+|---------|-------------------------------|
+| SPC e   | Eshell/Evaluate               |
+| SPC eb  | Evaluate elisp in buffer      |
+| SPC ed  | Evaluate defun containing or after point |
+| SPC ee  | Evaluate and elisp expression |
+| SPC eh  | Eshell history                |
+| SPC el  | Evaluate elisp expression before point |
+| SPC er  | Evaluate elisp in region      |
+| SPC es  | Eshell                        |
+
+| Keybind | Description                   |
+|---------|-------------------------------|
+| SPC g   | Git                           |
+| SPC g/  | Magit dispatch                |
+| SPC g.  | Magit file dispatch           |
+| SPC gb  | Switch branch                 |
+| SPC gc  | Create                        |
+| SPC gcb | Create branch and checkout    |
+| SPC gcc | Create commit                 |
+| SPC gcf | Create fixup commit           |
+| SPC gC  | Clone repo                    |
+| SPC gf  | Find                          |
+| SPC gfc | Show commit                   |
+| SPC gff | Magit find file               |
+| SPC gfg | Find gitconfig file           |
+| SPC gF  | Git fetch                     |
+| SPC gg  | Magit status                  |
+| SPC gi  | Initialize git repo           |
+| SPC gl  | Magit buffer log              |
+| SPC gr  | Git revert file               |
+| SPC gs  | Git stage file                |
+| SPC gt  | Git time machine              |
+| SPC gu  | Git unstage file              |
+
+| Keybind | Description                   |
+|---------|-------------------------------|
+| SPC h   | Help                          |
+| SPC hf  | Describe function             |
+| SPC hv  | Describe variable             |
+| SPC hrr | Reload emacs config           |
+
+| Keybind | Description                   |
+|---------|-------------------------------|
+| SPC s   | Search                        |
+| SPC SPC | List Buffers                  |
+| SPC sf  | Search File                   |
+| SPC /   | Search by Grep in the current buffer |
+| SPC sg  | Search by Grep in the whole project |
+
+| Keybind | Description                   |
+|---------|-------------------------------|
+| SPC t   | Toggle                        |
+| SPC td  | Toggle treemacs               |
+| SPC te  | Toggle eshell                 |
+| SPC tl  | Toggle line numbers           |
+| SPC tr  | Toggle rainbow mode           |
+| SPC tt  | Toggle truncated lines        |
+| SPC tv  | Toggle vterm                  |
+
+| Keybind | Description                   |
+|---------|-------------------------------|
+| SPC w   | Windows                       |
+| SPC wc  | Close window                  |
+| SPC wn  | New window                    |
+| SPC ws  | Horizontal split window       |
+| SPC wv  | Vertical split window         |
+| SPC wh  | Window left                   |
+| SPC wj  | Window down                   |
+| SPC wk  | Window up                     |
+| SPC wl  | Window right                  |
+| SPC ww  | Goto next window              |
