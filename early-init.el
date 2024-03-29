@@ -33,6 +33,7 @@
 (add-to-list 'default-frame-alist '(font . "Iosevka q SemiBold-15"))
 
 ;; Set transparency
+(set-frame-parameter nil 'alpha-background 90)
 (add-to-list 'default-frame-alist '(alpha-background . 90))
 
 
