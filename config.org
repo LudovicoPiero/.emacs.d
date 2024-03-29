@@ -130,6 +130,8 @@
      ;;(setq evil-collection-mode-list '(dashboard dired ibuffer))
      (evil-collection-init))
 
+   (use-package evil-nerd-commenter)
+
    ;; Unmap keys in 'evil-maps if not done, (setq org-return-follows-link t) will not work
    (with-eval-after-load 'evil-maps
      ;; Unset keys in evil-motion-state-map
@@ -395,7 +397,7 @@
       "fc" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit emacs config")
       "fr" '(counsel-recentf :wk "Find recent files")
       "ff" '(lsp-format-buffer :wk "Format Buffer") ;; TODO: move this somewhere
-      "TAB TAB" '(comment-line :wk "Comment lines"))
+      "TAB TAB" '(evilnc-comment-or-uncomment-lines :wk "Comment lines"))
 
   (airi/leader-keys
     "b" '(:ignore t :wk "Bookmarks/Buffers")
