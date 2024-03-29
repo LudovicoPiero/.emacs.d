@@ -1,6 +1,11 @@
 # Created by https://www.toptal.com/developers/gitignore/api/emacs
 # Edit at https://www.toptal.com/developers/gitignore?templates=emacs
 
+# Folder created by no-littering
+/etc
+/var
+/tmp
+
 /.lsp-session-v1
 /eln-cache/
 /elpaca/

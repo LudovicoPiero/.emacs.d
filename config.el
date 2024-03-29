@@ -74,14 +74,18 @@
 ;; Setting RETURN key in org-mode to follow links
 (setq org-return-follows-link t)
 
-;; Enable column number mode
-(column-number-mode 1)
+;; Remembering minibuffer prompt history
+(setq history-length 25)
+(savehist-mode 1)
+
+;; Prevent using UI dialogs for prompts
+(setq use-dialog-box nil)
+
+;; Disable lock files (.#filenameblabla)
+(setq create-lockfiles nil)
 
 ;; Automatically revert buffers when files change on disk
 (global-auto-revert-mode t)
-
-;; Enable display of line numbers in buffers
-(global-display-line-numbers-mode 1)
 
 ;; You can select text and delete it by typing.
 (delete-selection-mode 1)
@@ -130,9 +134,6 @@
 ;; Disable noisy bell
 (setq visible-bell t
       ring-bell-function #'ignore)
-
-;; Enable visual line mode globally
-(global-visual-line-mode t)
 
 ;; Show trailing whitespace
 (setq-default show-trailing-whitespace t)
@@ -610,9 +611,9 @@
   :config
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
-(use-package tree-sitter-indentation
-  :after tree-sitter
-  :hook (tree-sitter-after-on . tree-sitter-indentation-mode))
+;;(use-package tree-sitter-indentation
+;;  :after tree-sitter
+;;  :hook (tree-sitter-after-on . tree-sitter-indentation-mode))
 
 
 (defun my/enable-tree-sitter ()
