@@ -6,15 +6,7 @@
 /var
 /tmp
 /config.el
-
-/.lsp-session-v1
-/eln-cache/
 /elpaca/
-/eshell/
-/projectile-bookmarks.eld
-/recentf
-/bookmarks
-/transient
 
 ### Emacs ###
 # -*- mode: gitignore; -*-
