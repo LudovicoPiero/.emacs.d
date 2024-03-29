@@ -42,6 +42,12 @@
 ;; Enable display of line numbers in buffers
 (global-display-line-numbers-mode 1)
 
+;; Disable line numbers for some modes
+(dolist (mode '(org-mode-hook
+                term-mode-hook
+                eshell-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
 ;; Enable visual line mode globally
 (global-visual-line-mode t)
 
