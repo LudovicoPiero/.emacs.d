@@ -30,7 +30,6 @@
   - [[#lsp-mode][LSP Mode]]
   - [[#nix-mode][Nix Mode]]
   - [[#web-development][Web Development]]
-- [[#neotree][Neotree]]
 - [[#org-mode][Org Mode]]
   - [[#enabling-table-of-contents][Enabling Table of Contents]]
   - [[#enabling-org-bullets][Enabling Org Bullets]]
@@ -47,6 +46,8 @@
 - [[#theme][THEME]]
   - [[#all-theme][All Theme]]
   - [[#modeline][Modeline]]
+- [[#treesitter][Treesitter]]
+- [[#treemacs][Treemacs]]
 - [[#undo-tree][Undo Tree]]
 - [[#which-key][Which Key]]
 
@@ -142,102 +143,98 @@
    This section contains various settings that don't fall into any specific category, grouped together for convenience.
 
    #+begin_src emacs-lisp
-     ;; Enable column number mode
-     (column-number-mode 1)
+   ;; Enable column number mode
+   (column-number-mode 1)
 
-     ;; Automatically revert buffers when files change on disk
-     (global-auto-revert-mode t)
+   ;; Automatically revert buffers when files change on disk
+   (global-auto-revert-mode t)
 
-     ;; Enable display of line numbers in buffers
-     (global-display-line-numbers-mode 1)
+   ;; Enable display of line numbers in buffers
+   (global-display-line-numbers-mode 1)
 
-     ;; Set default indentation settings
-     (setq-default indent-tabs-mode nil)
-     (setq-default tab-width 2)
+   ;; You can select text and delete it by typing.
+   (delete-selection-mode 1)
 
-     ;; Configure whitespace display style
-     (setq-default whitespace-style
-                   '(face
-                     tabs
-                     spaces
-                     trailing
-                     lines-tail
-                     newline
-                     missing-newline-at-eof
-                     space-before-tab
-                     indentation
-                     empty
-                     space-after-tab
-                     space-mark
-                     tab-mark
-                     newline-mark))
+   ;; Set default indentation settings
+   (setq-default indent-tabs-mode nil)
+   (setq-default tab-width 2)
 
-     ;; Replace yes-or-no-p with y-or-n-p
-     (fset 'yes-or-no-p 'y-or-n-p)
+   ;; Configure whitespace display style
+   (setq-default whitespace-style
+                 '(face
+                   tabs
+                   spaces
+                   trailing
+                   lines-tail
+                   newline
+                   missing-newline-at-eof
+                   space-before-tab
+                   indentation
+                   empty
+                   space-after-tab
+                   space-mark
+                   tab-mark
+                   newline-mark))
 
-     ;; Set backup directory and options
-     (setq backup-directory-alist '(("." . "~/.config/emacs/backup"))
-           backup-by-copying      t  ; Don't de-link hard links
-           version-control        t  ; Use version numbers on backups
-           delete-old-versions    t  ; Automatically delete excess backups
-           kept-new-versions      10 ; How many of the newest versions to keep
-           kept-old-versions      5) ; How many of the old versions to keep
+   ;; Replace yes-or-no-p with y-or-n-p
+   (fset 'yes-or-no-p 'y-or-n-p)
 
-     ;; Disable creation of backup and autosave files
-     (setq make-backup-files nil
-           auto-save-default nil)
+   ;; Set backup directory and options
+   (setq backup-directory-alist '(("." . "~/.config/emacs/backup"))
+         backup-by-copying      t  ; Don't de-link hard links
+         version-control        t  ; Use version numbers on backups
+         delete-old-versions    t  ; Automatically delete excess backups
+         kept-new-versions      10 ; How many of the newest versions to keep
+         kept-old-versions      5) ; How many of the old versions to keep
 
-     ;; Improved handling of clipboard
-     (setq select-enable-clipboard t
-           select-enable-primary t
-           save-interprogram-paste-before-kill t)
+   ;; Disable creation of backup and autosave files
+   (setq make-backup-files nil
+         auto-save-default nil)
 
-     ;; Disable noisy bell
-     (setq visible-bell t
-           ring-bell-function #'ignore)
+   ;; Improved handling of clipboard
+   (setq select-enable-clipboard t
+         select-enable-primary t
+         save-interprogram-paste-before-kill t)
 
-     ;; Enable visual line mode globally
-     (global-visual-line-mode t)
+   ;; Disable noisy bell
+   (setq visible-bell t
+         ring-bell-function #'ignore)
 
-     ;; Show trailing whitespace
-     (setq-default show-trailing-whitespace t)
+   ;; Enable visual line mode globally
+   (global-visual-line-mode t)
 
-     ;; Use one space to end sentences
-     (setq sentence-end-double-space nil)
+   ;; Show trailing whitespace
+   (setq-default show-trailing-whitespace t)
 
-     ;; Prefer UTF-8 coding system
-     (prefer-coding-system 'utf-8)
+   ;; Use one space to end sentences
+   (setq sentence-end-double-space nil)
 
-     ;; Enable transient mark mode for better region handling
-     (transient-mark-mode 1)
+   ;; Prefer UTF-8 coding system
+   (prefer-coding-system 'utf-8)
 
-     ;; Disable line numbers for specific modes
-     (dolist (mode '(org-mode-hook
-                     term-mode-hook
-                     eshell-mode-hook))
-       (add-hook mode (lambda () (display-line-numbers-mode 0))))
+   ;; Enable transient mark mode for better region handling
+   (transient-mark-mode 1)
 
-     ;; Enable automatic parens pairing
-     (electric-pair-mode 1)
+   ;; Disable line numbers for specific modes
+   (dolist (mode '(org-mode-hook
+                   term-mode-hook
+                   eshell-mode-hook))
+     (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
-     ;; Prevent auto-pairing of <>
-     (add-hook 'org-mode-hook (lambda ()
-                                 (setq-local electric-pair-inhibit-predicate
-                                             `(lambda (c)
-                                                (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))))))
+   ;; Enable automatic parens pairing
+   (electric-pair-mode 1)
+
+   ;; Prevent auto-pairing of <>
+   (add-hook 'org-mode-hook (lambda ()
+                               (setq-local electric-pair-inhibit-predicate
+                                           `(lambda (c)
+                                              (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))))))
    #+end_src
 * All The Icons
-
-   This section configures the use of the "all-the-icons" package, which provides a collection of icons for use in Emacs, enhancing the visual appearance of various features and modes.
-
-   #+begin_src emacs-lisp
-   (use-package all-the-icons
-     :ensure t
-     :if (display-graphic-p))
-
-   (use-package all-the-icons-dired
-     :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
-   #+end_src
+#+begin_src emacs-lisp
+(use-package all-the-icons
+  :ensure t)
+#+end_src
 * Company
 
    The "Company" section configures the Company mode, which provides auto-completion capabilities in Emacs.
@@ -292,6 +289,9 @@
    The "Dired" section configures settings related to the Dired mode, which provides a file management interface in Emacs.
 
    #+begin_src emacs-lisp
+   (use-package all-the-icons-dired
+     :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
+
    (use-package dired-open
      :config
      ;; Customize file associations for opening files in Dired
@@ -419,7 +419,6 @@
     "d" '(:ignore t :wk "Dired")
     "dd" '(dired :wk "Open dired")
     "dj" '(dired-jump :wk "Dired jump to current")
-    "dn" '(neotree-dir :wk "Open directory in neotree")
     "dp" '(peep-dired :wk "Peep-dired"))
 
 
@@ -474,7 +473,7 @@
 
   (airi/leader-keys
     "t" '(:ignore t :wk "Toggle")
-    "td" '(neotree-toggle :wk "Toggle neotree")
+    "td" '(treemacs :wk "Toggle treemacs")
     "te" '(eshell-toggle :wk "Toggle eshell")
     "tl" '(display-line-numbers-mode :wk "Toggle line numbers")
     "tr" '(rainbow-mode :wk "Toggle rainbow mode")
@@ -576,7 +575,7 @@
     ;; Set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
     (setq lsp-keymap-prefix "C-c l")
     :config
-    (setq lsp-headerline-breadcrumb-enable nil
+    (setq lsp-headerline-breadcrumb-enable t
           lsp-diagnostics-provider 'flycheck
           lsp-completion-provider 'company
           lsp-log-io nil)
@@ -639,26 +638,6 @@
     (setq typescript-indent-level 2
           typescript-auto-indent-flag t))
   #+end_src
-* Neotree
-
-  Provides configuration for Neotree, a file explorer sidebar.
-
-  #+begin_src emacs-lisp
-  (use-package neotree
-    :config
-    (setq neo-smart-open t
-          neo-show-hidden-files t
-          neo-window-width 30
-          neo-window-fixed-size nil
-          inhibit-compacting-font-caches t
-          projectile-switch-project-action 'neotree-projectile-action
-          ;; Truncate long file names in Neotree
-          neo-after-create-hook
-          #'(lambda (_)
-              (setq truncate-lines t
-                    word-wrap nil
-                    auto-hscroll-mode nil))))
-  #+end_src
 * Org Mode
 
 ** Enabling Table of Contents
@@ -691,7 +670,7 @@
 
 ** Source Code Block Tag Expansion
    #+begin_src emacs-lisp
-   (add-hook 'org-mode-hook 'org-tempo-mode)
+   (require 'org-tempo)
    #+end_src
 * Projectile
 
@@ -713,27 +692,13 @@
   (projectile-enable-caching t)
 
   ;; Configure indexing method (default is 'alien for faster indexing)
-  (projectile-indexing-method 'native)
+  (projectile-indexing-method 'alien
+)
 
   ;; Display project name in the modeline
   (projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name)))))
-
-  ;; If you're using Ivy or Helm for completion, you can integrate Projectile
-  ;; with them for a better interactive experience
-  ;; :after ivy
-
-  ;; Enable Ivy integration
-  (use-package counsel-projectile
-    :config
-    (counsel-projectile-mode 1))
-
-  ;; Enable Helm integration
-  (use-package helm-projectile
-    :config
-    (helm-projectile-on))
 #+end_src
 * Rainbow Delimiters
-
 #+begin_src emacs-lisp
 (use-package rainbow-delimiters
   :hook ((emacs-lisp-mode . rainbow-delimiters-mode)
@@ -833,6 +798,43 @@
      :init (doom-modeline-mode 1))
    #+end_src
 
+* Treesitter
+#+begin_src emacs-lisp
+(use-package tree-sitter
+  :ensure t)
+
+(use-package tree-sitter-langs
+  :after tree-sitter
+  :ensure t
+  :config
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+
+(use-package tree-sitter-indentation
+  :after tree-sitter
+  :hook (tree-sitter-after-on . tree-sitter-indentation-mode))
+
+
+(defun my/enable-tree-sitter ()
+  "Enable Tree-sitter in `prog-mode'."
+  (interactive)
+  (require 'tree-sitter)
+  (require 'tree-sitter-langs)
+  (tree-sitter-mode)
+  (tree-sitter-hl-mode))
+
+(add-hook 'prog-mode-hook #'my/enable-tree-sitter)
+#+end_src
+
+* Treemacs
+#+begin_src emacs-lisp
+(use-package treemacs
+  :ensure t
+  :config
+  ;; Use icons from all-the-icons package
+  (setq treemacs-icons-theme 'all-the-icons)
+  ;; Adjust icon size (optional)
+  (treemacs-resize-icons 14))
+#+end_src
 * Undo Tree
 #+begin_src emacs-lisp
 (use-package undo-tree
@@ -845,10 +847,10 @@
 * Which Key
 
 #+BEGIN_SRC emacs-lisp
-(use-package which-key
-  :ensure t
-  :init (which-key-mode)
-  :diminish which-key-mode
-  :config
-  (setq which-key-idle-delay 0.3))
+  (use-package which-key
+    :ensure t
+    :init (which-key-mode)
+    :diminish which-key-mode
+    :config
+    (setq which-key-idle-delay 0.3))
 #+END_SRC

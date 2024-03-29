@@ -83,6 +83,9 @@
 ;; Enable display of line numbers in buffers
 (global-display-line-numbers-mode 1)
 
+;; You can select text and delete it by typing.
+(delete-selection-mode 1)
+
 ;; Set default indentation settings
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 2)
@@ -159,11 +162,7 @@
                                            (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))))))
 
 (use-package all-the-icons
-  :ensure t
-  :if (display-graphic-p))
-
-(use-package all-the-icons-dired
-  :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
+  :ensure t)
 
 (use-package company
   :defer 2
@@ -203,6 +202,9 @@
                                     (bookmarks . "book")))
   :config
   (dashboard-setup-startup-hook))
+
+(use-package all-the-icons-dired
+  :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
 
 (use-package dired-open
   :config
@@ -307,7 +309,6 @@
     "d" '(:ignore t :wk "Dired")
     "dd" '(dired :wk "Open dired")
     "dj" '(dired-jump :wk "Dired jump to current")
-    "dn" '(neotree-dir :wk "Open directory in neotree")
     "dp" '(peep-dired :wk "Peep-dired"))
 
 
@@ -362,7 +363,7 @@
 
   (airi/leader-keys
     "t" '(:ignore t :wk "Toggle")
-    "td" '(neotree-toggle :wk "Toggle neotree")
+    "td" '(treemacs :wk "Toggle treemacs")
     "te" '(eshell-toggle :wk "Toggle eshell")
     "tl" '(display-line-numbers-mode :wk "Toggle line numbers")
     "tr" '(rainbow-mode :wk "Toggle rainbow mode")
@@ -433,7 +434,7 @@
   ;; Set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
   (setq lsp-keymap-prefix "C-c l")
   :config
-  (setq lsp-headerline-breadcrumb-enable nil
+  (setq lsp-headerline-breadcrumb-enable t
         lsp-diagnostics-provider 'flycheck
         lsp-completion-provider 'company
         lsp-log-io nil)
@@ -484,21 +485,6 @@
   (setq typescript-indent-level 2
         typescript-auto-indent-flag t))
 
-(use-package neotree
-  :config
-  (setq neo-smart-open t
-        neo-show-hidden-files t
-        neo-window-width 30
-        neo-window-fixed-size nil
-        inhibit-compacting-font-caches t
-        projectile-switch-project-action 'neotree-projectile-action
-        ;; Truncate long file names in Neotree
-        neo-after-create-hook
-        #'(lambda (_)
-            (setq truncate-lines t
-                  word-wrap nil
-                  auto-hscroll-mode nil))))
-
 (use-package toc-org
   :commands toc-org-enable
   :hook (org-mode . toc-org-enable))
@@ -513,7 +499,7 @@
 
 (eval-after-load 'org-indent '(diminish 'org-indent-mode))
 
-(add-hook 'org-mode-hook 'org-tempo-mode)
+(require 'org-tempo)
 
 (use-package projectile
   :ensure t
@@ -532,24 +518,11 @@
   (projectile-enable-caching t)
 
   ;; Configure indexing method (default is 'alien for faster indexing)
-  (projectile-indexing-method 'native)
+  (projectile-indexing-method 'alien
+)
 
   ;; Display project name in the modeline
   (projectile-mode-line-function '(lambda () (format " Proj[%s]" (projectile-project-name)))))
-
-  ;; If you're using Ivy or Helm for completion, you can integrate Projectile
-  ;; with them for a better interactive experience
-  ;; :after ivy
-
-  ;; Enable Ivy integration
-  (use-package counsel-projectile
-    :config
-    (counsel-projectile-mode 1))
-
-  ;; Enable Helm integration
-  (use-package helm-projectile
-    :config
-    (helm-projectile-on))
 
 (use-package rainbow-delimiters
   :hook ((emacs-lisp-mode . rainbow-delimiters-mode)
@@ -627,6 +600,38 @@
   :config
   (setq doom-modeline-minor-modes t)
   :init (doom-modeline-mode 1))
+
+(use-package tree-sitter
+  :ensure t)
+
+(use-package tree-sitter-langs
+  :after tree-sitter
+  :ensure t
+  :config
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+
+(use-package tree-sitter-indentation
+  :after tree-sitter
+  :hook (tree-sitter-after-on . tree-sitter-indentation-mode))
+
+
+(defun my/enable-tree-sitter ()
+  "Enable Tree-sitter in `prog-mode'."
+  (interactive)
+  (require 'tree-sitter)
+  (require 'tree-sitter-langs)
+  (tree-sitter-mode)
+  (tree-sitter-hl-mode))
+
+(add-hook 'prog-mode-hook #'my/enable-tree-sitter)
+
+(use-package treemacs
+  :ensure t
+  :config
+  ;; Use icons from all-the-icons package
+  (setq treemacs-icons-theme 'all-the-icons)
+  ;; Adjust icon size (optional)
+  (treemacs-resize-icons 14))
 
 (use-package undo-tree
   :ensure t
