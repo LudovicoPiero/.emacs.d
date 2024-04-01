@@ -1,18 +1,17 @@
-;;; early-init.el --- Emacs early initialization -*- lexical-binding: t; -*-
+;; -*- lexical-binding: t; -*-
 
-;;; Commentary:
-
-;; This file, early-init.el, is run before init.el, prior to package and UI initialization.
-;; It is used to configure settings that should be set up as early as possible in the Emacs startup process.
-
-;;; Code:
+;; -----------------------------------------------------------------------------------;;
+;; This early-init.el file was auto-tangled from an orgmode file. (C) Ludovico Piero  ;;
+;; -----------------------------------------------------------------------------------;;
 
 (setq package-enable-at-startup nil)
 
 ;; Make ~/.config/emacs clean
 (use-package no-littering)
+
 ;; Recent files
-(require 'recentf)
+(use-package recentf
+  :ensure nil)
 (add-to-list 'recentf-exclude
              (recentf-expand-file-name no-littering-var-directory))
 (add-to-list 'recentf-exclude
@@ -99,6 +98,7 @@
 ;; Call the reset function after startup (in case ELPA is already initialized)
 (+reset-init-values)
 
-(provide 'early-init)
-
-;;; early-init.el ends here
+;; This needs to be before loading init.org so I don't have to give
+;; permission to load the file when it is symlinked.
+(customize-set-variable
+ 'vc-follow-symlinks t "Follow Symlinks without asking")

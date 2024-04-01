@@ -4,14 +4,18 @@
 #+DATE: [2024-03-27 Wed]
 #+STARTUP: showeverything
 #+OPTIONS: toc:2
+#+PROPERTY: header-args:emacs-lisp :tangle yes
 #+REPOSITORY: https://github.com/ludovicopiero/.emacs.d
 
 * Table Of Content :toc:
+- [[#early-init][Early init]]
+- [[#exported-file-note][Exported File Note]]
 - [[#general-packages--tweaks-to-load-before-anything][General Packages / Tweaks to Load Before Anything]]
   - [[#elpaca-package-manager][Elpaca Package Manager]]
   - [[#evil-mode][Evil Mode]]
   - [[#tweaks][Tweaks]]
 - [[#all-the-icons][All The Icons]]
+- [[#centered-cursor][Centered Cursor]]
 - [[#company][Company]]
 - [[#dashboard][Dashboard]]
 - [[#deadgrep][Deadgrep]]
@@ -20,15 +24,19 @@
 - [[#direnv][Direnv]]
 - [[#elcord-discord-rpc][Elcord (Discord RPC)]]
 - [[#flycheck][Flycheck]]
+- [[#gcmh][GCMH]]
 - [[#general-keybind][General Keybind]]
 - [[#git-programs][Git Programs]]
   - [[#git-time-machine][Git Time Machine]]
   - [[#magit][Magit]]
 - [[#languages-support][Languages Support]]
-  - [[#lsp-mode][LSP Mode]]
+  - [[#eglot][Eglot]]
   - [[#nix-mode][Nix Mode]]
+  - [[#python][Python]]
+  - [[#rust][Rust]]
   - [[#web-development][Web Development]]
 - [[#org-mode][Org Mode]]
+  - [[#org-modern][Org Modern]]
   - [[#enabling-table-of-contents][Enabling Table of Contents]]
   - [[#enabling-org-bullets][Enabling Org Bullets]]
   - [[#disable-electric-indent][Disable Electric Indent]]
@@ -49,6 +57,133 @@
 - [[#undo-tree][Undo Tree]]
 - [[#vertico][Vertico]]
 - [[#which-key][Which Key]]
+- [[#yasnippet][Yasnippet]]
+
+* Early init
+#+begin_src emacs-lisp :tangle ./early-init.el
+;; -*- lexical-binding: t; -*-
+
+;; -----------------------------------------------------------------------------------;;
+;; This early-init.el file was auto-tangled from an orgmode file. (C) Ludovico Piero  ;;
+;; -----------------------------------------------------------------------------------;;
+
+(setq package-enable-at-startup nil)
+
+;; Make ~/.config/emacs clean
+(use-package no-littering)
+
+;; Recent files
+(use-package recentf
+  :ensure nil)
+(add-to-list 'recentf-exclude
+             (recentf-expand-file-name no-littering-var-directory))
+(add-to-list 'recentf-exclude
+             (recentf-expand-file-name no-littering-etc-directory))
+;; Saved customizations
+(setq custom-file (no-littering-expand-etc-file-name "custom.el"))
+;; Native compilation cache
+(when (fboundp 'startup-redirect-eln-cache)
+  (startup-redirect-eln-cache
+   (convert-standard-filename
+    (expand-file-name  "var/eln-cache/" user-emacs-directory))))
+(no-littering-theme-backups)
+;; Disable GUI elements early to improve startup time
+(push '(menu-bar-lines . 0) default-frame-alist)
+(push '(tool-bar-lines . 0) default-frame-alist)
+(push '(vertical-scroll-bars) default-frame-alist)
+(dolist (mode '(tool-bar-mode scroll-bar-mode menu-bar-mode blink-cursor-mode))
+  (funcall mode 0))
+
+;; Change font early to ensure proper display
+(add-to-list 'default-frame-alist '(font . "Iosevka q SemiBold-15"))
+
+;; Set transparency
+(set-frame-parameter nil 'alpha-background 90)
+(add-to-list 'default-frame-alist '(alpha-background . 90))
+
+
+;; Enable column number mode
+(column-number-mode 1)
+
+;; Enable display of line numbers in buffers
+(global-display-line-numbers-mode 1)
+
+;; Disable line numbers for some modes
+(dolist (mode '(org-mode-hook
+                term-mode-hook
+                eshell-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
+;; Enable visual line mode globally
+(global-visual-line-mode t)
+
+;; Increase process output max for LSP performance
+(setq read-process-output-max (* 1024 1024))
+
+;; Disable native-compilation warnings/errors during async compilation
+(setq native-comp-async-report-warnings-errors nil)
+
+;; Disable visual bell and startup screen
+(setq ring-bell-function #'ignore
+      inhibit-startup-screen t)
+
+;; Increase GC threshold and percentage to reduce GC pauses during startup
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 1)
+
+;; Function to run GC when Emacs frame loses focus
+(defun +gc-after-focus-change ()
+  "Run garbage collection when Emacs frame loses focus."
+  (run-with-idle-timer
+   5 nil
+   (lambda () (unless (frame-focus-state) (garbage-collect)))))
+
+;; Function to reset initialization values after Emacs initialization
+(defun +reset-init-values ()
+  "Reset initialization values after Emacs startup."
+  ;; Initialize default-file-name-handler-alist if it's not defined
+  (unless (boundp 'default-file-name-handler-alist)
+    (setq default-file-name-handler-alist file-name-handler-alist))
+  (run-with-idle-timer
+   1 nil
+   (lambda ()
+     (setq file-name-handler-alist default-file-name-handler-alist
+           gc-cons-percentage 0.1
+           gc-cons-threshold 100000000)
+     (message "gc-cons-threshold & file-name-handler-alist restored")
+     (when (boundp 'after-focus-change-function)
+       (add-function :after after-focus-change-function #'+gc-after-focus-change)))))
+
+;; Hook to reset initialization values after Emacs Lisp Package Archive (ELPA) initialization
+(with-eval-after-load 'elpaca
+  (add-hook 'elpaca-after-init-hook '+reset-init-values))
+
+;; Call the reset function after startup (in case ELPA is already initialized)
+(+reset-init-values)
+
+;; This needs to be before loading init.org so I don't have to give
+;; permission to load the file when it is symlinked.
+(customize-set-variable
+ 'vc-follow-symlinks t "Follow Symlinks without asking")
+#+end_src
+
+* Exported File Note
+#+begin_src emacs-lisp
+;; -*- lexical-binding: t; -*-
+;; init.el --- Emacs Configuration File
+;;
+;; Copyright (C) 2024 Ludovico Piero
+;; Author: Ludovico Piero <lewdovico@gnuweeb.org>
+;; URL: https://github.com/ludovicopiero/.emacs.d
+;; Git-Repository: git://github.com/ludovicopiero/.emacs.d.git
+;; Created: 2024-03-27
+
+;;; Commentary:
+
+;; Configuration files for Emacs.
+
+;;; Code:
+#+end_src
 
 * General Packages / Tweaks to Load Before Anything
 ** Elpaca Package Manager
@@ -70,6 +205,7 @@
    (let* ((repo (expand-file-name "elpaca/" elpaca-repos-directory))
           (build (expand-file-name "elpaca/" elpaca-builds-directory))
           (order (cdr elpaca-order))
+
           (default-directory repo))
      (add-to-list 'load-path (if (file-exists-p build) build repo))
      (unless (file-exists-p repo)
@@ -246,6 +382,12 @@
 (use-package all-the-icons
   :ensure t)
 #+end_src
+* Centered Cursor
+#+begin_src emacs-lisp
+  (use-package centered-cursor-mode
+    :diminish centered-cursor-mode
+    :config (global-centered-cursor-mode))
+#+end_src
 * Company
 
    The "Company" section configures the Company mode, which provides auto-completion capabilities in Emacs.
@@ -253,6 +395,7 @@
    #+begin_src emacs-lisp
    (use-package company
      :defer 2
+     :diminish
      :custom
      (company-begin-commands '(self-insert-command))
      (company-idle-delay .1)
@@ -263,6 +406,7 @@
 
    (use-package company-box
      :after company
+     :diminish
      :hook (company-mode . company-box-mode))
 
    (use-package company-quickhelp
@@ -390,10 +534,14 @@
      :diminish flycheck-mode
      :init (global-flycheck-mode))
    #+end_src
+* GCMH
+#+begin_src emacs-lisp
+
+#+end_src
 * General Keybind
 
    The "General Keybind" section configures general keybindings using the general package, allowing for leader key functionality and easy customization.
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (use-package general
   :ensure t
   :config
@@ -408,7 +556,7 @@
 
   (airi/leader-keys
       "." '(find-file :wk "Find file")
-      "fc" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit emacs config")
+      "fc" '((lambda () (interactive) (find-file "~/.config/emacs/init.org")) :wk "Edit emacs config")
       "fr" '(recentf :wk "Find recent files")
       "ff" '(lsp-format-buffer :wk "Format Buffer") ;; TODO: move this somewhere
       "TAB TAB" '(evilnc-comment-or-uncomment-lines :wk "Comment lines"))
@@ -539,28 +687,18 @@
    #+end_src
 * Languages Support
 
-** LSP Mode
+** Eglot
 
   Provides configuration for LSP (Language Server Protocol), enabling features like syntax checking, code completion, and documentation lookup.
 
   #+begin_src emacs-lisp
-  (use-package lsp-mode
-    :init
-    ;; Set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-    (setq lsp-keymap-prefix "C-c l")
-    :config
-    (setq lsp-headerline-breadcrumb-enable t
-          lsp-diagnostics-provider 'flycheck
-          lsp-completion-provider 'company
-          lsp-log-io nil)
-    :hook
-    ;; Attach LSP mode to the appropriate major mode
-    ((lsp-mode . lsp-enable-which-key-integration))
-    :commands lsp)
+  (use-package eglot
+    :ensure t
+  )
 
-  (use-package lsp-ui)
-  (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-  (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+  ;; (use-package lsp-ui)
+  ;; (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+  ;; (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
   #+end_src
 
 ** Nix Mode
@@ -572,13 +710,49 @@
     :ensure nil
     :after lsp-mode
     :custom
-    (lsp-nix-nil-formatter ["alejandra"]))
+    (lsp-nix-nil-formatter ["alejandra"])
+  )
 
   (use-package nix-mode
-    :hook (nix-mode . lsp-deferred)
-    :ensure t)
+    :ensure t
+    :hook (nix-mode . eglot-ensure)
+    :config
+    ;; Ensure `nil` is in your PATH.
+    (add-to-list 'eglot-server-programs '(nix-mode . ("nil")))
+  )
   #+end_src
 
+
+** Python
+  #+begin_src emacs-lisp
+  (use-package python-mode
+    :ensure nil
+    :hook (python-mode .eglot-ensure))
+  #+end_src
+
+** Rust
+  #+begin_src emacs-lisp
+  (use-package rustic
+    :ensure t
+    :bind (:map rustic-mode-map
+                ("M-j" . lsp-ui-imenu)
+                ("M-?" . lsp-find-references)
+                ("C-c C-c l" . flycheck-list-errors)
+                ("C-c C-c a" . lsp-execute-code-action)
+                ("C-c C-c r" . lsp-rename)
+                ("C-c C-c q" . lsp-workspace-restart)
+                ("C-c C-c Q" . lsp-workspace-shutdown)
+                ("C-c C-c s" . lsp-rust-analyzer-status))
+    :config
+    ;; uncomment for less flashiness
+    ;; (setq lsp-eldoc-hook nil)
+    ;; (setq lsp-enable-symbol-highlighting nil)
+    ;; (setq lsp-signature-auto-activate nil)
+
+    ;; comment to disable rustfmt on save
+    (setq rustic-format-on-save t)
+    (add-hook 'rustic-mode-hook 'rk/rustic-mode-hook))
+  #+end_src
 ** Web Development
 
   Configures modes and settings for web development languages like HTML, CSS, JavaScript, and TypeScript.
@@ -614,7 +788,49 @@
           typescript-auto-indent-flag t))
   #+end_src
 * Org Mode
+** Org Modern
+#+begin_src emacs-lisp
+(use-package org-modern
+  :ensure t
+  :config
+  (set-face-attribute 'default nil :family "Iosevka q SemiBold")
+  (set-face-attribute 'variable-pitch nil :family "Iosevka q")
+  (set-face-attribute 'org-modern-symbol nil :family "Iosevka SemiBold")
+  ;; Add frame borders and window dividers
+  (modify-all-frames-parameters
+   '((right-divider-width . 40)
+     (internal-border-width . 40)))
+  (dolist (face '(window-divider
+                  window-divider-first-pixel
+                  window-divider-last-pixel))
+    (face-spec-reset-face face)
+    (set-face-foreground face (face-attribute 'default :background)))
+  (set-face-background 'fringe (face-attribute 'default :background))
 
+  (setq
+   ;; Edit settings
+   org-auto-align-tags nil
+   org-tags-column 0
+   org-catch-invisible-edits 'show-and-error
+   org-special-ctrl-a/e t
+   org-insert-heading-respect-content t
+
+   ;; Org styling, hide markup etc.
+   org-hide-emphasis-markers t
+   org-pretty-entities t
+   org-ellipsis "…"
+
+   ;; Agenda styling
+   org-agenda-tags-column 0
+   org-agenda-block-separator ?─
+   org-agenda-time-grid
+   '((daily today require-timed)
+     (800 1000 1200 1400 1600 1800 2000)
+     " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+   org-agenda-current-time-string
+   "◀── now ─────────────────────────────────────────────────")
+  (with-eval-after-load 'org (global-org-modern-mode)))
+#+end_src
 ** Enabling Table of Contents
    #+begin_src emacs-lisp
    (use-package toc-org
@@ -645,7 +861,8 @@
 
 ** Source Code Block Tag Expansion
    #+begin_src emacs-lisp
-   (require 'org-tempo)
+   (use-package org-tempo
+     :ensure nil)
    #+end_src
 * Projectile
 
@@ -751,7 +968,7 @@
         ;; Global settings (defaults)
         (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
               doom-themes-enable-italic t) ; if nil, italics is universally disabled
-        (load-theme 'doom-ayu-dark t)
+        (load-theme 'doom-one t)
 
         ;; Enable flashing mode-line on errors
         (doom-themes-visual-bell-config)
@@ -831,10 +1048,10 @@
   ;; (setq vertico-scroll-margin 0)
 
   ;; Show more candidates
-  (setq vertico-count 10)
+  (setq vertico-count 5)
 
   ;; Grow and shrink the Vertico minibuffer
-  (setq vertico-resize t)
+  ;; (setq vertico-resize t)
 
   ;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
   (setq vertico-cycle t)
@@ -887,7 +1104,7 @@
 
 * Which Key
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package which-key
     :ensure t
     :init (which-key-mode)
@@ -895,3 +1112,28 @@
     :config
     (setq which-key-idle-delay 0.3))
 #+END_SRC
+
+
+* Yasnippet
+#+begin_src emacs-lisp
+(use-package yasnippet
+  :ensure t
+  :diminish
+  :config
+  (setq yas-snippet-dir (expand-file-name "snippets" user-emacs-directory))
+  (yas-global-mode)
+)
+
+(use-package yasnippet-snippets
+  :ensure t
+  :after yasnippet)
+
+(use-package competitive-programming-snippets
+  :ensure t
+  :after yasnippet
+  :config (competitive-programming-snippets-init))
+#+end_src
+
+TODO:
+- gcmh
+- block cursor + centered-cursor-mode
