@@ -6,24 +6,6 @@
 
 (setq package-enable-at-startup nil)
 
-;; Make ~/.config/emacs clean
-(use-package no-littering)
-
-;; Recent files
-(use-package recentf
-  :ensure nil)
-(add-to-list 'recentf-exclude
-             (recentf-expand-file-name no-littering-var-directory))
-(add-to-list 'recentf-exclude
-             (recentf-expand-file-name no-littering-etc-directory))
-;; Saved customizations
-(setq custom-file (no-littering-expand-etc-file-name "custom.el"))
-;; Native compilation cache
-(when (fboundp 'startup-redirect-eln-cache)
-  (startup-redirect-eln-cache
-   (convert-standard-filename
-    (expand-file-name  "var/eln-cache/" user-emacs-directory))))
-(no-littering-theme-backups)
 ;; Disable GUI elements early to improve startup time
 (push '(menu-bar-lines . 0) default-frame-alist)
 (push '(tool-bar-lines . 0) default-frame-alist)
@@ -56,6 +38,26 @@
 
 ;; Increase process output max for LSP performance
 (setq read-process-output-max (* 1024 1024))
+
+
+;; Make ~/.config/emacs clean
+(use-package no-littering)
+
+;; Recent files
+(use-package recentf
+  :ensure nil)
+(add-to-list 'recentf-exclude
+             (recentf-expand-file-name no-littering-var-directory))
+(add-to-list 'recentf-exclude
+             (recentf-expand-file-name no-littering-etc-directory))
+;; Saved customizations
+(setq custom-file (no-littering-expand-etc-file-name "custom.el"))
+;; Native compilation cache
+(when (fboundp 'startup-redirect-eln-cache)
+  (startup-redirect-eln-cache
+   (convert-standard-filename
+    (expand-file-name  "var/eln-cache/" user-emacs-directory))))
+(no-littering-theme-backups)
 
 ;; Disable native-compilation warnings/errors during async compilation
 (setq native-comp-async-report-warnings-errors nil)

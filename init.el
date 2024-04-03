@@ -75,6 +75,15 @@
   (setq evil-want-keybinding nil)
   (setq evil-vsplit-window-right t)
   (setq evil-split-window-below t)
+
+  ;; ----- Setting cursor colors
+  (setq evil-emacs-state-cursor    '("#649bce" box))
+  (setq evil-normal-state-cursor   '("#d9a871" box))
+  (setq evil-operator-state-cursor '("#ebcb8b" hollow))
+  (setq evil-visual-state-cursor   '("#677691" box))
+  (setq evil-insert-state-cursor   '("#eb998b" box))
+  (setq evil-replace-state-cursor  '("#eb998b" hbar))
+  (setq evil-motion-state-cursor   '("#ad8beb" box))
   (evil-mode))
 
 (use-package evil-collection
@@ -201,7 +210,7 @@
   :custom
   (company-begin-commands '(self-insert-command))
   (company-idle-delay .1)
-  (company-minimum-prefix-length 2)
+  (company-minimum-prefix-length 1)
   (company-show-numbers t)
   (company-tooltip-align-annotations 't)
   (global-company-mode t))
@@ -302,7 +311,9 @@
   :diminish flycheck-mode
   :init (global-flycheck-mode))
 
-
+(use-package flycheck-eglot
+  :after flycheck
+  :config (global-flycheck-eglot-mode))
 
 (use-package general
   :ensure t
@@ -390,6 +401,11 @@
                 (ignore (elpaca-process-queues)))
               :wk "Reload emacs config"))
 
+ (airi/leader-keys
+    "o" '(:ignore t :wk "ORG Stuff")
+    "oa" '(org-agenda :wk "ORG Agenda")
+    "oT" '(org-babel-tangle :wk "Tangle ORG File")
+    "ot" '(org-todo :wk "Toggle TODO"))
 
   (airi/leader-keys
     "s" '(:ignore t :wk "Search")
@@ -435,10 +451,6 @@
 (use-package eglot
   :ensure t
 )
-
-;; (use-package lsp-ui)
-;; (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-;; (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 
 (use-package lsp-nix
   :ensure nil
@@ -517,8 +529,8 @@
   (set-face-attribute 'org-modern-symbol nil :family "Iosevka SemiBold")
   ;; Add frame borders and window dividers
   (modify-all-frames-parameters
-   '((right-divider-width . 40)
-     (internal-border-width . 40)))
+   '((right-divider-width . 20)
+     (internal-border-width . 20)))
   (dolist (face '(window-divider
                   window-divider-first-pixel
                   window-divider-last-pixel))
@@ -778,9 +790,11 @@
 (use-package yasnippet
   :ensure t
   :diminish
+  :init
+  (yas-global-mode 1)
+  :hook (term-mode . (lambda () (yas-minor-mode -1)))
   :config
   (setq yas-snippet-dir (expand-file-name "snippets" user-emacs-directory))
-  (yas-global-mode)
 )
 
 (use-package yasnippet-snippets

@@ -24,7 +24,6 @@
 - [[#direnv][Direnv]]
 - [[#elcord-discord-rpc][Elcord (Discord RPC)]]
 - [[#flycheck][Flycheck]]
-- [[#gcmh][GCMH]]
 - [[#general-keybind][General Keybind]]
 - [[#git-programs][Git Programs]]
   - [[#git-time-machine][Git Time Machine]]
@@ -48,7 +47,6 @@
 - [[#shells-and-terminal][Shells and Terminal]]
   - [[#eshell][Eshell]]
   - [[#vterm][Vterm]]
-  - [[#vterm-toggle][Vterm-toggle]]
 - [[#ui][UI]]
   - [[#theme][Theme]]
   - [[#modeline][Modeline]]
@@ -69,24 +67,6 @@
 
 (setq package-enable-at-startup nil)
 
-;; Make ~/.config/emacs clean
-(use-package no-littering)
-
-;; Recent files
-(use-package recentf
-  :ensure nil)
-(add-to-list 'recentf-exclude
-             (recentf-expand-file-name no-littering-var-directory))
-(add-to-list 'recentf-exclude
-             (recentf-expand-file-name no-littering-etc-directory))
-;; Saved customizations
-(setq custom-file (no-littering-expand-etc-file-name "custom.el"))
-;; Native compilation cache
-(when (fboundp 'startup-redirect-eln-cache)
-  (startup-redirect-eln-cache
-   (convert-standard-filename
-    (expand-file-name  "var/eln-cache/" user-emacs-directory))))
-(no-littering-theme-backups)
 ;; Disable GUI elements early to improve startup time
 (push '(menu-bar-lines . 0) default-frame-alist)
 (push '(tool-bar-lines . 0) default-frame-alist)
@@ -119,6 +99,26 @@
 
 ;; Increase process output max for LSP performance
 (setq read-process-output-max (* 1024 1024))
+
+
+;; Make ~/.config/emacs clean
+(use-package no-littering)
+
+;; Recent files
+(use-package recentf
+  :ensure nil)
+(add-to-list 'recentf-exclude
+             (recentf-expand-file-name no-littering-var-directory))
+(add-to-list 'recentf-exclude
+             (recentf-expand-file-name no-littering-etc-directory))
+;; Saved customizations
+(setq custom-file (no-littering-expand-etc-file-name "custom.el"))
+;; Native compilation cache
+(when (fboundp 'startup-redirect-eln-cache)
+  (startup-redirect-eln-cache
+   (convert-standard-filename
+    (expand-file-name  "var/eln-cache/" user-emacs-directory))))
+(no-littering-theme-backups)
 
 ;; Disable native-compilation warnings/errors during async compilation
 (setq native-comp-async-report-warnings-errors nil)
@@ -258,6 +258,15 @@
      (setq evil-want-keybinding nil)
      (setq evil-vsplit-window-right t)
      (setq evil-split-window-below t)
+
+     ;; ----- Setting cursor colors
+     (setq evil-emacs-state-cursor    '("#649bce" box))
+     (setq evil-normal-state-cursor   '("#d9a871" box))
+     (setq evil-operator-state-cursor '("#ebcb8b" hollow))
+     (setq evil-visual-state-cursor   '("#677691" box))
+     (setq evil-insert-state-cursor   '("#eb998b" box))
+     (setq evil-replace-state-cursor  '("#eb998b" hbar))
+     (setq evil-motion-state-cursor   '("#ad8beb" box))
      (evil-mode))
 
    (use-package evil-collection
@@ -399,7 +408,7 @@
      :custom
      (company-begin-commands '(self-insert-command))
      (company-idle-delay .1)
-     (company-minimum-prefix-length 2)
+     (company-minimum-prefix-length 1)
      (company-show-numbers t)
      (company-tooltip-align-annotations 't)
      (global-company-mode t))
@@ -533,11 +542,12 @@
      :after lsp-mode
      :diminish flycheck-mode
      :init (global-flycheck-mode))
-   #+end_src
-* GCMH
-#+begin_src emacs-lisp
 
-#+end_src
+   (use-package flycheck-eglot
+     :after flycheck
+     :config (global-flycheck-eglot-mode))
+   #+end_src
+
 * General Keybind
 
    The "General Keybind" section configures general keybindings using the general package, allowing for leader key functionality and easy customization.
@@ -628,6 +638,11 @@
                 (ignore (elpaca-process-queues)))
               :wk "Reload emacs config"))
 
+ (airi/leader-keys
+    "o" '(:ignore t :wk "ORG Stuff")
+    "oa" '(org-agenda :wk "ORG Agenda")
+    "oT" '(org-babel-tangle :wk "Tangle ORG File")
+    "ot" '(org-todo :wk "Toggle TODO"))
 
   (airi/leader-keys
     "s" '(:ignore t :wk "Search")
@@ -660,6 +675,7 @@
     "ww" '(evil-window-next :wk "Goto next window"))
 )
 #+END_SRC
+
 * Git Programs
 
    The "Git Programs" section configures settings related to Git integration in Emacs.
@@ -695,10 +711,6 @@
   (use-package eglot
     :ensure t
   )
-
-  ;; (use-package lsp-ui)
-  ;; (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-  ;; (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
   #+end_src
 
 ** Nix Mode
@@ -798,8 +810,8 @@
   (set-face-attribute 'org-modern-symbol nil :family "Iosevka SemiBold")
   ;; Add frame borders and window dividers
   (modify-all-frames-parameters
-   '((right-divider-width . 40)
-     (internal-border-width . 40)))
+   '((right-divider-width . 20)
+     (internal-border-width . 20)))
   (dolist (face '(window-divider
                   window-divider-first-pixel
                   window-divider-last-pixel))
@@ -939,10 +951,7 @@
   (setq shell-file-name "/bin/sh"
         vterm-max-scrollback 5000
         vterm-always-compile-module t))
-#+end_src
 
-** Vterm-toggle
-#+begin_src emacs-lisp
 (use-package vterm-toggle
   :after vterm
   :config
@@ -958,7 +967,6 @@
                  (reusable-frames . visible)
                  (window-height . 0.3))))
 #+end_src
-
 * UI
 ** Theme
    #+begin_src emacs-lisp
@@ -1102,6 +1110,7 @@
         completion-category-overrides '((file (styles partial-completion)))))
 #+end_src
 
+
 * Which Key
 
 #+begin_src emacs-lisp
@@ -1111,7 +1120,7 @@
     :diminish which-key-mode
     :config
     (setq which-key-idle-delay 0.3))
-#+END_SRC
+#+end_src
 
 
 * Yasnippet
@@ -1119,9 +1128,11 @@
 (use-package yasnippet
   :ensure t
   :diminish
+  :init
+  (yas-global-mode 1)
+  :hook (term-mode . (lambda () (yas-minor-mode -1)))
   :config
   (setq yas-snippet-dir (expand-file-name "snippets" user-emacs-directory))
-  (yas-global-mode)
 )
 
 (use-package yasnippet-snippets
@@ -1133,7 +1144,3 @@
   :after yasnippet
   :config (competitive-programming-snippets-init))
 #+end_src
-
-TODO:
-- gcmh
-- block cursor + centered-cursor-mode
