@@ -340,36 +340,6 @@
   ;; Enable direnv mode globally
   (direnv-mode))
 
-(use-package elcord
-  :config
-  (setq elcord-quiet t
-        elcord-editor-icon "doom_cute_icon"
-        elcord-use-major-mode-as-main-icon nil)
-  (elcord-mode)
-
-  (defun elcord--disable-elcord-if-no-frames (f)
-    "Disable elcord mode if there are no frames left after deleting F from visible-frame-list."
-    ;; (declare (ignore f))
-    (when (let ((frames (delete f (visible-frame-list))))
-            (or (null frames)
-                (and (null (cdr frames))
-                     (eq (car frames) terminal-frame))))
-      (elcord-mode -1)
-      (add-hook 'after-make-frame-functions 'elcord--enable-on-frame-created)))
-
-  (defun elcord--enable-on-frame-created (f)
-    "Enable elcord mode when a new frame F is created."
-    ;; (declare (ignore f))
-    (elcord-mode +1))
-
-  (defun my/elcord-mode-hook ()
-    "Hook to manage elcord mode activation and deactivation."
-    (if elcord-mode
-        (add-hook 'delete-frame-functions 'elcord--disable-elcord-if-no-frames)
-      (remove-hook 'delete-frame-functions 'elcord--disable-elcord-if-no-frames)))
-
-  (add-hook 'elcord-mode-hook 'my/elcord-mode-hook))
-
 (use-package flycheck
   :after lsp-mode
   :diminish flycheck-mode
@@ -758,8 +728,6 @@
 (defun my/enable-tree-sitter ()
   "Enable Tree-sitter in `prog-mode'."
   (interactive)
-  (require 'tree-sitter)
-  (require 'tree-sitter-langs)
   (tree-sitter-mode)
   (tree-sitter-hl-mode))
 
